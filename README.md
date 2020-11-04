@@ -7,7 +7,7 @@
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Tensaiz/DyNSimF.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Tensaiz/DyNSimF/context:python)
 [![PyPI download month](https://img.shields.io/pypi/dm/dynsimf.svg?color=blue&style=plastic)](https://pypi.python.org/pypi/dynsimf/)
 
-<img src="https://github.com/Tensaiz/DyNSimF/blob/core-features/docs/mock_logo.png" alt="DyNSimF logo" height="200"/>
+<img src="https://raw.githubusercontent.com/Tensaiz/DyNSimF/master/docs/mock_logo.png" alt="DyNSimF logo" height="200"/>
 
 The Network Simulation Framework can be used to create any network-based simulation, where the nodes require continuous states.
 
@@ -38,4 +38,4 @@ If you like to include your model in DyNSimF feel free to fork the project, open
 
 Do you want to be part of the DyNSimF? Join the community to discuss enhancements, bugs, concepts or any other topic on **Slack**!
 
-[<img align="middle" width="150" src="https://github.com/Tensaiz/DyNSimF/blob/core-features/docs/join_slack.png">](https://join.slack.com/t/networksimula-dur1487/shared_invite/zt-i3d3qcz8-UiCHZ_WHX4f7Dl9aQ6TQMQ)
+[<img align="middle" width="150" src="https://raw.githubusercontent.com/Tensaiz/DyNSimF/master/docs/join_slack.png">](https://join.slack.com/t/dynsimfdynami-mst3236/shared_invite/zt-iznvqu2p-KW6AHxFLhMandFXwc6Tu1g)
