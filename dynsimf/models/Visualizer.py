@@ -231,8 +231,8 @@ class Visualizer(object):
             self.utilities
         ]
         total = 0
-        for visualizables in visualizables:
-            max_iteration = list(self.states.keys())[-1]
+        for visualizable in visualizables:
+            max_iteration = list(visualizable.keys())[-1]
             if max_iteration > total:
                 total = max_iteration
         return total

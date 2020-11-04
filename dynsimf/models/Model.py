@@ -262,17 +262,17 @@ class Model(object, metaclass=ABCMeta):
 
     def write_states_iteration(self, n_nodes):
         with open(self.config.state_memory_config.path, 'a') as f:
-            f.write('# Iteration {0} - ({2}, {3})\n'.format(self.current_iteration, n_nodes, len(self.state_names)))
+            f.write('# Iteration {0} - ({1}, {2})\n'.format(self.current_iteration, n_nodes, len(self.state_names)))
             np.savetxt(f, self.node_states)
 
     def write_utility_iteration(self, n_nodes):
         with open(self.config.utility_memory_config.path, 'a') as f:
-            f.write('# Iteration {0} - ({2}, {3})\n'.format(self.current_iteration, n_nodes, n_nodes))
+            f.write('# Iteration {0} - ({1}, {2})\n'.format(self.current_iteration, n_nodes, n_nodes))
             np.savetxt(f, self.edge_utility)
 
     def write_adjacency_iteration(self, n_nodes):
         with open(self.config.adjacency_memory_config.path, 'a') as f:
-            f.write('# Iteration {0} - ({2}, {3})\n'.format(self.current_iteration, n_nodes, n_nodes))
+            f.write('# Iteration {0} - ({1}, {2})\n'.format(self.current_iteration, n_nodes, n_nodes))
             np.savetxt(f, self.adjacency)
 
     def store_simulation_step(self):

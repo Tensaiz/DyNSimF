@@ -3,8 +3,6 @@ import numpy as np
 
 from dynsimf.models.Model import Model
 from dynsimf.models.Model import ModelConfiguration
-from dynsimf.models.Memory import MemoryConfiguration
-from dynsimf.models.Memory import MemoryConfigurationType
 from dynsimf.models.Scheme import Scheme
 from dynsimf.models.Update import Update
 from dynsimf.models.Update import UpdateConfiguration

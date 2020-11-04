@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 
 from dynsimf.models.Model import Model
 from dynsimf.models.Model import ModelConfiguration
-from dynsimf.models.Memory import MemoryConfiguration
-from dynsimf.models.Memory import MemoryConfigurationType
 from dynsimf.models.Example import Example
 
 
