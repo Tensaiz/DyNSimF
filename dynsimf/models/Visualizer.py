@@ -232,7 +232,9 @@ class Visualizer(object):
         ]
         total = 0
         for visualizable in visualizables:
-            max_iteration = list(visualizable.keys())[-1]
-            if max_iteration > total:
-                total = max_iteration
+            keys = list(visualizable.keys())
+            if len(keys) > 0:
+                max_iteration = keys[-1]
+                if max_iteration > total:
+                    total = max_iteration
         return total
