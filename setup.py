@@ -13,9 +13,9 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 
 setup(name='dynsimf',
-      version='0.2.3',
+      version='0.1',
       license='BSD-Clause-2',
-      description='Network Simulation Framework',
+      description='Dynamic Network Simulation Framework',
       url='https://github.com/Tensaiz/DyNSimF',
       author='Mathijs Maijer',
       author_email='m.f.maijer@gmail.com',
@@ -32,7 +32,7 @@ setup(name='dynsimf',
 
           'Programming Language :: Python :: 3'
       ],
-      keywords='networks simulator network-of-networks analysis',
+      keywords='dynamic-networks networks simulator network-of-networks analysis',
       long_description=long_description,
       long_description_content_type='text/markdown',
       packages=find_packages(exclude=["*.test", "*.test.*", "test.*", "test", "dynsimf.test", "dynsimf.test.*"]),
