@@ -1,0 +1,9 @@
+numpy
+networkx
+tqdm
+pyintergraph
+python-igraph
+pillow
+sphinx_rtd_theme
+pytest
+salib>=1.3
