@@ -13,7 +13,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 
 setup(name='dynsimf',
-      version='0.1',
+      version='0.1.1',
       license='BSD-Clause-2',
       description='Dynamic Network Simulation Framework',
       url='https://github.com/Tensaiz/DyNSimF',
