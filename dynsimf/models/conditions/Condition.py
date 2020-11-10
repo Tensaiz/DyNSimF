@@ -11,6 +11,7 @@ class ConditionType(Enum):
     STATE = 0
     ADJACENCY = 1
     UTILITY = 2
+    CUSTOM = 3
 
 
 class Condition(metaclass=ABCMeta):
@@ -58,15 +59,12 @@ class Condition(metaclass=ABCMeta):
         }
         return condition_type_to_function_map[self.condition_type]
 
-    @abstractmethod
     def test_adjacency(self):
         pass
 
-    @abstractmethod
     def test_utility(self):
         pass
 
-    @abstractmethod
     def test_states(self):
         pass
 

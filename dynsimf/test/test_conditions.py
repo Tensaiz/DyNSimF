@@ -7,6 +7,7 @@ from dynsimf.models.conditions.ThresholdCondition import ThresholdCondition
 from dynsimf.models.conditions.ThresholdCondition import ThresholdOperator
 from dynsimf.models.conditions.ThresholdCondition import ThresholdConfiguration
 from dynsimf.models.conditions.Condition import ConditionType
+from dynsimf.models.conditions.CustomCondition import CustomCondition
 
 __author__ = "Mathijs Maijer"
 __email__ = "m.f.maijer@gmail.com"
@@ -26,7 +27,7 @@ class ConditionsTest(unittest.TestCase):
     def test_threshold_adjacency_condition(self):
         np.random.seed(1337)
         adjacency = np.random.randint(2, size=25).reshape(5, 5)
-        
+
         t_cfg = ThresholdConfiguration(ThresholdOperator.GE, 3)
         t = ThresholdCondition(ConditionType.ADJACENCY, t_cfg)
 
@@ -81,7 +82,7 @@ class ConditionsTest(unittest.TestCase):
 
         t_cfg_adj = ThresholdConfiguration(ThresholdOperator.GE, 2)
         t_adj = ThresholdCondition(ConditionType.ADJACENCY, t_cfg_adj)
-        
+
         t_cfg = ThresholdConfiguration(ThresholdOperator.GT, 0.5, 'A')
         t = ThresholdCondition(ConditionType.STATE, t_cfg, chained_condition=t_adj)
         t.set_state_index(1)
@@ -89,3 +90,22 @@ class ConditionsTest(unittest.TestCase):
         nodes = t.get_valid_nodes((np.arange(len(states)), states, adjacency, None))
 
         self.assertEqual(list(nodes), [2])
+
+    def test_custom_condition(self):
+        np.random.seed(1337)
+        states = np.random.random_sample((100, 1))
+
+        def sample(model_input):
+            nodes = model_input[0]
+            state2 = model_input[1][:, 0]
+
+            chances = (np.ones(len(nodes)) - state2) / 10
+            draws = np.random.random_sample(len(nodes))
+
+            indices = np.where(draws < chances)[0]
+
+            return nodes[indices]
+
+        c = CustomCondition(sample)
+        nodes = c.get_valid_nodes((np.arange(len(states)), states, None, None))
+        self.assertEqual(list(nodes),[ 1, 21, 35, 38, 51, 65, 74, 86])
