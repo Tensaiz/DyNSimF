@@ -26,8 +26,12 @@ class VisualizationConfiguration(object):
         self.validate()
 
     def validate(self):
-        pass
-
+        if 'initial_positions' not in self.__dict__:
+            self.initial_positions = None
+        if 'repeat' not in self.__dict__:
+            self.repeat = False
+        if 'save_fps' not in self.__dict__:
+            self.save_fps = 5
 
 class Visualizer(object):
     """
@@ -46,26 +50,51 @@ class Visualizer(object):
     def create_locations(self):
         print('Creating locations for adjacency graphs...')
         if len(self.adjacencies.values()) > 0:
-            self.locations = {}
-            for iteration, adjacency_matrix in self.adjacencies.items():
-                last_index = self.get_last_index(self.adjacencies, iteration - 1)
-                prev_adj = self.adjacencies[last_index]
-                if (prev_adj == adjacency_matrix).all() and last_index in self.locations:
-                    self.locations[iteration] = self.locations[last_index]
-                else:
-                    # If the current adjacency matrix is not the same as the last one
-                    locations = self.create_adjacency_node_locations(adjacency_matrix)
-                    self.locations[iteration] = locations
+            self.assign_dynamic_graph_values()
         else:
-            self.locations = None
-            self.create_graph_node_locations()
+            self.assign_static_graph_values()
 
-    def create_adjacency_node_locations(self, adjacency_matrix):
+    def assign_dynamic_graph_values(self):
+        self.locations = {}
+        self.graphs = {}
+        for iteration, adjacency_matrix in self.adjacencies.items():
+            last_index = self.get_last_index(self.adjacencies, iteration - 1)
+            prev_adj = self.adjacencies[last_index]
+            # If the adjacency matrix hasn't changed and the locations are already calculated
+            # Use the previous locations and graph
+            if (prev_adj == adjacency_matrix).all() and last_index in self.locations:
+                self.locations[iteration] = self.locations[last_index]
+                self.graphs[iteration] = self.graphs[last_index]
+            # Otherwise create new positions and graph
+            else:
+                self.create_new_positions_graph(iteration, adjacency_matrix, last_index)
+
+    def create_new_positions_graph(self, iteration, adjacency_matrix, last_index):
+        # If it is the first iteration and initial positions have been given, use them
+        if iteration == list(self.adjacencies.keys())[0] and self.config.initial_positions:
+            self.locations[iteration] = self.config.initial_positions
+            self.graphs[iteration] = nx.convert_matrix.from_numpy_array(adjacency_matrix)
+        else:
+            # Otherwise use the previous graph's calculated positions as initial positions if there are
+            initial_positions = self.get_initial_positions(last_index)
+            graph, locations = self.create_adjacency_node_locations(adjacency_matrix, initial_positions)
+            self.locations[iteration] = locations
+            self.graphs[iteration] = graph
+
+    def get_initial_positions(self, last_index):
+        if last_index in self.locations:
+            initial_positions = self.locations[last_index]
+        else:
+            initial_positions = None
+        return initial_positions
+
+    def create_adjacency_node_locations(self, adjacency_matrix, initial_positions):
         # Adjacency matrix to graph
         graph = nx.convert_matrix.from_numpy_array(adjacency_matrix)
-        return self.create_layout(graph)
+        positions = self.create_layout(graph, initial_positions)
+        return (graph, positions)
 
-    def create_layout(self, graph):
+    def create_layout(self, graph, initial_positions=None):
         if 'layout' in self.config.__dict__:
             if self.config.layout == 'fr':
                 import pyintergraph
@@ -79,13 +108,21 @@ class Visualizer(object):
                 else:
                     positions = self.config.layout(graph)
         else:
-            positions = nx.drawing.spring_layout(graph)
+            positions = nx.drawing.spring_layout(graph, pos=initial_positions, k=0.15)
         return positions
 
     def create_graph_node_locations(self):
-        if 'pos' in self.graph.nodes[0].keys():
+        if self.config.initial_positions:
+            self.static_locations = self.config.initial_positions
+        elif 'pos' in self.graph.nodes[0].keys():
             self.static_locations = nx.get_node_attributes(self.graph, 'pos')
-        self.static_locations = self.create_layout(self.graph)
+        else:
+            self.static_locations = self.create_layout(self.graph)
+
+    def assign_static_graph_values(self):
+        self.locations = None
+        self.graphs = None
+        self.create_graph_node_locations()
 
     @staticmethod
     def read_states_from_file(path):
@@ -153,14 +190,16 @@ class Visualizer(object):
 
             if self.locations:
                 locations_index = self.get_last_index(self.adjacencies, index)
-                self.graph = nx.convert_matrix.from_numpy_array(self.adjacencies[locations_index])
+                # self.graph = nx.convert_matrix.from_numpy_array(self.adjacencies[locations_index])
+                graph = self.graphs[locations_index]
                 pos = self.locations[locations_index]
             else:
                 pos = self.static_locations
-            nx.draw_networkx_edges(self.graph, pos,
+                graph = self.graph
+            nx.draw_networkx_edges(graph, pos,
                                    alpha=0.2, ax=network)
-            nc = nx.draw_networkx_nodes(self.graph, pos,
-                                        nodelist=self.graph.nodes,
+            nc = nx.draw_networkx_nodes(graph, pos,
+                                        nodelist=graph.nodes,
                                         node_color=node_colors[curr],
                                         vmin=vmin, vmax=vmax,
                                         cmap=cm, node_size=50,
@@ -171,7 +210,7 @@ class Visualizer(object):
             network.set_title('Iteration: ' + str(index))
 
         ani = animation.FuncAnimation(fig, animate, n, interval=200,
-                                      repeat=True, blit=False)
+                                      repeat=self.config.repeat, blit=False)
 
         norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
         sm = plt.cm.ScalarMappable(cmap=cm, norm=norm)
@@ -201,7 +240,7 @@ class Visualizer(object):
             os.makedirs(file_path)
 
         from PIL import Image
-        writergif = animation.PillowWriter(fps=5)
+        writergif = animation.PillowWriter(fps=self.config.save_fps)
         simulation.save(self.config.plot_output, writer=writergif)
         print('Saved: ' + self.config.plot_output)
 

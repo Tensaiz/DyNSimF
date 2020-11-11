@@ -23,5 +23,4 @@ class CustomCondition(Condition):
         return self.sample_function
 
     def get_arguments(self, model_input):
-        self.arguments.insert(0, model_input)
-        return self.arguments
+        return [model_input] + self.arguments

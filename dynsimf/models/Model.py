@@ -74,7 +74,7 @@ class Model(object, metaclass=ABCMeta):
     def init(self):
         self.graph_changed = False
         self.adjacency = nx.convert_matrix.to_numpy_array(self.graph)
-        self.new_adjacency = self.adjacency[:]
+        self.new_adjacency = self.adjacency[:].copy()
         if self.config.utility:
             self.initialize_utility()
 
@@ -83,7 +83,7 @@ class Model(object, metaclass=ABCMeta):
 
     def set_states(self, states):
         self.node_states = np.zeros((len(self.graph.nodes()), len(states)))
-        self.new_node_states = self.node_states[:]
+        self.new_node_states = self.node_states[:].copy()
         self.state_names = states
         for i, state in enumerate(states):
             self.state_map[state] = i
@@ -96,12 +96,12 @@ class Model(object, metaclass=ABCMeta):
                 self.node_states[:, self.state_map[state]] = val(**arguments)
             else:
                 self.node_states[:, self.state_map[state]] = val
-        self.new_node_states = self.node_states[:]
+        self.new_node_states = self.node_states[:].copy()
 
     def initialize_utility(self):
         n_nodes = len(self.graph.nodes())
         self.edge_utility = np.zeros((n_nodes, n_nodes))
-        self.new_edge_utility = self.edge_utility[:]
+        self.new_edge_utility = self.edge_utility[:].copy()
 
     def get_utility(self):
         return self.edge_utility
@@ -112,7 +112,7 @@ class Model(object, metaclass=ABCMeta):
     def set_initial_utility(self, init_function, params=None):
         params = params if params else {}
         self.edge_utility = init_function(*params)
-        self.new_edge_utility = self.edge_utility[:]
+        self.new_edge_utility = self.edge_utility[:].copy()
 
     def get_state_index(self, state):
         return self.state_map[state]
@@ -502,11 +502,11 @@ class Model(object, metaclass=ABCMeta):
         return update.condition.get_valid_nodes((scheme_nodes, self.node_states, self.adjacency, self.edge_utility))
 
     def iteration_assignment(self):
-        self.node_states = self.new_node_states[:]
-        self.edge_utility = self.new_edge_utility[:]
+        self.node_states = self.new_node_states[:].copy()
+        self.edge_utility = self.new_edge_utility[:].copy()
 
         if self.graph_changed:
-            self.adjacency = self.new_adjacency[:]
+            self.adjacency = self.new_adjacency[:].copy()
             self.new_graph = nx.convert_matrix.from_numpy_array(self.new_adjacency)
             self.graph = self.new_graph.copy()
 
@@ -541,5 +541,5 @@ class Model(object, metaclass=ABCMeta):
     def reset(self):
         # Add more model variables here
         self.node_states = np.zeros((len(self.graph.nodes()), len(self.state_names)))
-        self.new_node_states = self.node_states[:]
+        self.new_node_states = self.node_states[:].copy()
         self.current_iteration = 0

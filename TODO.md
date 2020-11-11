@@ -1,9 +1,9 @@
 # TODO
 
 ## General
+- [x] Rename/relocate project
 - [ ] Add validation to all class members and throw meaningful warnings
 - [ ] Add enums where applicable
-- [x] Rename/relocate project
 
 ## Model
 - [x] Create scheme class
@@ -39,6 +39,7 @@
   - [x] Add
   - [x] Remove
   - [x] Optional utility init
+  - [ ] New adjacency matrix
 - [x] Add nodes
   - [x] Optional state init
   - [x] Optional edges 
@@ -54,7 +55,7 @@
 
 
 ## Conditions
-- [] Use model variables in conditions (get state values to determine stochastic)
+- [x] Custom condition
 
 ## Examples
 - [x] Add example runner
@@ -74,10 +75,10 @@
 - [x] Add more layout and networkx layout support
 - [x] Deal with different dimensions when writing
 - [x] Reconfiguration visualization
+- [x] More consistent network update locations
 - [x] Read states from disk
   - [ ] Rework for dictionary format
 - [ ] Visualize utility
-- [ ] More consistent network update locations
 - [ ] Add regular plots / trends
 - [ ] Optimize animation if possible
 - [ ] Support jupyter notebook
