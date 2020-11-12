@@ -4,14 +4,14 @@ import copy
 import numpy as np
 import networkx as nx
 
-from dynsimf.models.Memory import MemoryConfiguration
-from dynsimf.models.Memory import MemoryConfigurationType
-from dynsimf.models.Update import Update
-from dynsimf.models.Update import UpdateType
-from dynsimf.models.Update import UpdateConfiguration
-from dynsimf.models.Scheme import Scheme
-from dynsimf.models.Visualizer import VisualizationConfiguration
-from dynsimf.models.Visualizer import Visualizer
+from dynsimf.models.components.Memory import MemoryConfiguration
+from dynsimf.models.components.Memory import MemoryConfigurationType
+from dynsimf.models.components.Update import Update
+from dynsimf.models.components.Update import UpdateType
+from dynsimf.models.components.Update import UpdateConfiguration
+from dynsimf.models.components.Scheme import Scheme
+from dynsimf.models.tools.Visualizer import VisualizationConfiguration
+from dynsimf.models.tools.Visualizer import Visualizer
 
 from typing import List
 
@@ -215,6 +215,22 @@ class Model(object, metaclass=ABCMeta):
     def get_neighbors(self, node):
         return list(self.graph.neighbors(node))
 
+    def get_neighbors_neighbors_adjacency_matrix(self):
+        adj_neighbors_neighbors = self.adjacency @ self.adjacency
+        # Doesn't matter how many connections are shared
+        adj_neighbors_neighbors[adj_neighbors_neighbors > 0] = 1
+        # Remove direct neighbors
+        adj_neighbors_neighbors = adj_neighbors_neighbors - self.adjacency
+        # Clean matrix
+        adj_neighbors_neighbors[adj_neighbors_neighbors < 0] = 0
+        # Can't have connection to yourself
+        np.fill_diagonal(adj_neighbors_neighbors, 0)
+        return adj_neighbors_neighbors
+
+    def get_neighbors_neighbors(self, node):
+        neighbors_neighbors_matrix = self.get_neighbors_neighbors_adjacency_matrix()
+        return np.array(self.graph.nodes)[np.where(neighbors_neighbors_matrix[node] > 0)[0]]
+
     def simulate(self, n, show_tqdm=True):
         self.simulation_output = {
             'states': {},
@@ -325,7 +341,7 @@ class Model(object, metaclass=ABCMeta):
         if update.update_type == UpdateType.STATE:
             self.update_state(update_nodes, updatables)
         elif update.update_type == UpdateType.UTILITY:
-            self.update_utility(update_nodes, update_nodes)
+            self.update_utility(update_nodes, updatables)
         elif update.update_type == UpdateType.NETWORK:
             self.update_network(update_nodes, updatables)
 
@@ -515,6 +531,7 @@ class Model(object, metaclass=ABCMeta):
         self.graph_changed = False
 
     def configure_visualization(self, options, output):
+        options['state_names'] = self.state_names
         configuration = VisualizationConfiguration(options)
         self.visualizer = Visualizer(configuration, self.graph, self.state_map, output)
 

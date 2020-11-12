@@ -4,24 +4,29 @@ import matplotlib.pyplot as plt
 
 from dynsimf.models.Model import Model
 from dynsimf.models.Model import ModelConfiguration
-from dynsimf.models.Memory import MemoryConfiguration
-from dynsimf.models.Memory import MemoryConfigurationType
-from dynsimf.models.conditions.Condition import ConditionType
-from dynsimf.models.conditions.ThresholdCondition import ThresholdCondition
-from dynsimf.models.conditions.CustomCondition import CustomCondition
-from dynsimf.models.conditions.ThresholdCondition import ThresholdOperator
-from dynsimf.models.conditions.ThresholdCondition import ThresholdConfiguration
-from dynsimf.models.conditions.StochasticCondition import StochasticCondition
+from dynsimf.models.components.Memory import MemoryConfiguration
+from dynsimf.models.components.Memory import MemoryConfigurationType
+from dynsimf.models.components.conditions.Condition import ConditionType
+from dynsimf.models.components.conditions.ThresholdCondition import ThresholdCondition
+from dynsimf.models.components.conditions.CustomCondition import CustomCondition
+from dynsimf.models.components.conditions.ThresholdCondition import ThresholdOperator
+from dynsimf.models.components.conditions.ThresholdCondition import ThresholdConfiguration
+from dynsimf.models.components.conditions.StochasticCondition import StochasticCondition
 
 
 if __name__ == "__main__":
     # Network definition
-    n_nodes = 100
-    g = nx.random_geometric_graph(n_nodes, 0.125)
+    n_nodes = 50
+    g = nx.random_geometric_graph(n_nodes, 0.2)
+
     cfg = {
         'utility': True,
         'adjacency_memory_config': \
             MemoryConfiguration(MemoryConfigurationType.ADJACENCY, {
+                'memory_size': 0
+            }),
+        'utility_memory_config': \
+            MemoryConfiguration(MemoryConfigurationType.UTILITY, {
                 'memory_size': 0
             })
     }
@@ -99,7 +104,6 @@ if __name__ == "__main__":
             # softmax
             weights = np.exp(f_utility) / np.sum(np.exp(f_utility), axis=0)
             removable_neighbors[node]['remove'].append(np.random.choice(neighbors, p=weights))
-
         return {
             'edge_change': removable_neighbors
         }
@@ -109,14 +113,9 @@ if __name__ == "__main__":
         addable_neighbors = {}
         for node in nodes:
             addable_neighbors[node] = {'add': []}
-            neighbors_neighbors = set()
-            neighbors = model.get_neighbors(node)
-            # For all neighbors of a node
-            for neighbor in neighbors:
-                neighbor_neighbors = model.get_neighbors(neighbor)
-                for neighbor_neighbor in neighbor_neighbors:
-                    neighbors_neighbors.add(neighbor_neighbor)
-            neighbors_neighbors = list(neighbors_neighbors)
+            neighbors_neighbors = model.get_neighbors_neighbors(node)
+            if len(neighbors_neighbors) == 0:
+                continue
             neighbors_neighbors_addiction = A[neighbors_neighbors]
 
             a_utility = 1 - abs(neighbors_neighbors_addiction - A[node])
@@ -125,7 +124,9 @@ if __name__ == "__main__":
 
             # softmax
             weights = np.exp(weights) / np.sum(np.exp(weights), axis=0)
-            addable_neighbors[node]['add'].append(np.random.choice(neighbors_neighbors, p=weights))
+            selected_neighbor = np.random.choice(neighbors_neighbors, p=weights)
+            selected_neighbor_index = np.where(neighbors_neighbors == selected_neighbor)[0]
+            addable_neighbors[node]['add'].append((selected_neighbor, a_utility[selected_neighbor_index], a_utility[selected_neighbor_index]))
 
         return {
             'edge_change': addable_neighbors
@@ -135,7 +136,7 @@ if __name__ == "__main__":
     def add_condition(model_input):
         nodes = model_input[0]
         nodes_addiction = model.get_state('A')[nodes]
-
+        # sigmoid (?)
         chances = (1 - nodes_addiction) / 10
         draws = np.random.random_sample(len(nodes))
         indices = np.where(draws < chances)[0]
@@ -215,7 +216,7 @@ if __name__ == "__main__":
         'plot_interval': 2,
         'initial_positions': nx.get_node_attributes(g, 'pos'),
         'plot_variable': 'A',
-        'color_scale': 'RdBu',
+        'color_scale': 'Reds',
         'variable_limits': {
             'A': [0, 0.8],
             'lambda': [0.5, 1.5],

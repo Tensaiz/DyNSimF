@@ -3,9 +3,9 @@ import numpy as np
 
 from dynsimf.models.Model import Model
 from dynsimf.models.Model import ModelConfiguration
-from dynsimf.models.Scheme import Scheme
-from dynsimf.models.Update import Update
-from dynsimf.models.Update import UpdateConfiguration
+from dynsimf.models.components.Scheme import Scheme
+from dynsimf.models.components.Update import Update
+from dynsimf.models.components.Update import UpdateConfiguration
 from dynsimf.models.Example import Example
 
 

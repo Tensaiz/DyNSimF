@@ -1,9 +1,9 @@
 import unittest
 
-from dynsimf.models.Scheme import Scheme
-from dynsimf.models.Update import Update
-from dynsimf.models.Update import UpdateConfiguration
-from dynsimf.models.Update import UpdateType
+from dynsimf.models.components.Scheme import Scheme
+from dynsimf.models.components.Update import Update
+from dynsimf.models.components.Update import UpdateConfiguration
+from dynsimf.models.components.Update import UpdateType
 
 __author__ = "Mathijs Maijer"
 __email__ = "m.f.maijer@gmail.com"

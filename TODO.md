@@ -20,7 +20,9 @@
 - [ ] Multi process update functions per iteration
 
 ## Dynamic network utility layer
-### Utility
+
+
+### Edge values
 - [x] Utility per edge
 - [x] Utility change
   - [x] NxN matrix
@@ -29,6 +31,11 @@
 - [x] Threshold state conditions
 - [x] Threshold utility
 - [x] Threshold adjacency (amount of neighbors)
+- [ ] Rework to edge values dictionary
+
+### Utility
+- [ ] Implement utility maximisation
+- [ ] Implement cost function(s)
 
 ### Network updating
 <!-- - [ ] Order update dictionary -> First utility then network? -->
@@ -52,7 +59,6 @@
 ## Update
 - [x] Add support for conditions
 - [x] Set all chained condition state indices
-
 
 ## Conditions
 - [x] Custom condition
@@ -78,7 +84,7 @@
 - [x] More consistent network update locations
 - [x] Read states from disk
   - [ ] Rework for dictionary format
-- [ ] Visualize utility
+- [x] Visualize utility
 - [ ] Add regular plots / trends
 - [ ] Optimize animation if possible
 - [ ] Support jupyter notebook

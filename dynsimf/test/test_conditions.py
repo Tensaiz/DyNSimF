@@ -2,12 +2,12 @@ import unittest
 
 import numpy as np
 
-from dynsimf.models.conditions.StochasticCondition import StochasticCondition
-from dynsimf.models.conditions.ThresholdCondition import ThresholdCondition
-from dynsimf.models.conditions.ThresholdCondition import ThresholdOperator
-from dynsimf.models.conditions.ThresholdCondition import ThresholdConfiguration
-from dynsimf.models.conditions.Condition import ConditionType
-from dynsimf.models.conditions.CustomCondition import CustomCondition
+from dynsimf.models.components.conditions.StochasticCondition import StochasticCondition
+from dynsimf.models.components.conditions.ThresholdCondition import ThresholdCondition
+from dynsimf.models.components.conditions.ThresholdCondition import ThresholdOperator
+from dynsimf.models.components.conditions.ThresholdCondition import ThresholdConfiguration
+from dynsimf.models.components.conditions.Condition import ConditionType
+from dynsimf.models.components.conditions.CustomCondition import CustomCondition
 
 __author__ = "Mathijs Maijer"
 __email__ = "m.f.maijer@gmail.com"

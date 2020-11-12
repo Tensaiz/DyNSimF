@@ -1,6 +1,6 @@
 from dynsimf.models.Model import Model
-from dynsimf.models.SA import SensitivityAnalysis
-from dynsimf.models.SA import SAConfiguration
+from dynsimf.models.tools.SA import SensitivityAnalysis
+from dynsimf.models.tools.SA import SAConfiguration
 
 import networkx as nx
 from networkx.algorithms import average_clustering
