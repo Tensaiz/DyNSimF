@@ -1,5 +1,7 @@
 from enum import Enum
 
+from dynsimf.models.helpers.ConfigValidator import ConfigValidator
+
 __author__ = "Mathijs Maijer"
 __email__ = "m.f.maijer@gmail.com"
 
@@ -39,6 +41,12 @@ class MemoryConfiguration(object):
         self.validate()
 
     def validate(self):
+        ConfigValidator.validate('save_disk', self.save_disk, bool)
+        ConfigValidator.validate('memory_size', self.memory_size, int)
+        ConfigValidator.validate('save_interval', self.save_interval, int)
+        ConfigValidator.validate('memory_interval', self.memory_interval, int)
+        ConfigValidator.validate('path', self.path, str)
+
         if self.save_disk and self.save_interval < 1:
             raise ValueError('Save interval should be a positive integer when save disk is true')
         

@@ -11,7 +11,6 @@ __email__ = "m.f.maijer@gmail.com"
 class UpdateTest(unittest.TestCase):
     def test_init(self):
         cfg_options = {
-            'arguments': None,
             'condition': None,
             'get_nodes': False,
             'update_type': UpdateType.STATE

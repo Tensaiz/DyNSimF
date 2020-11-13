@@ -3,6 +3,7 @@
 ## General
 - [x] Rename/relocate project
 - [ ] Add validation to all class members and throw meaningful warnings
+  - [x] Add validation to configs
 - [ ] Add enums where applicable
 
 ## Model
@@ -47,6 +48,7 @@
   - [x] Remove
   - [x] Optional utility init
   - [ ] New adjacency matrix
+    - [ ] New utility matrix for init
 - [x] Add nodes
   - [x] Optional state init
   - [x] Optional edges 
@@ -75,6 +77,7 @@
   - [x] Min / Max
   - [x] Network metrics
   - [x] Custom function
+- [ ] Rework to take model refactoring into account
 - [ ] Add parallel processing
 
 ## Visualization

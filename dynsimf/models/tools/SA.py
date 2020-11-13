@@ -1,6 +1,10 @@
 # import multiprocessing as mp
 import copy
 import numpy as np
+import types
+
+from dynsimf.models.helpers.ConfigValidator import ConfigValidator
+
 from SALib.sample import saltelli
 from SALib.analyze import sobol
 
@@ -13,13 +17,34 @@ class SAConfiguration(object):
     Configuration for Sensitivity Analysis
     TODO: Validate attributes
     """
-    def __init__(self, iterable=(), **kwargs):
-        self.__dict__.update(iterable, **kwargs)
+    def __init__(self, config):
+        self.set_config(config)
         self.validate()
 
-    def validate(self):
-        pass
+    def set_config(self, config):
+        self.config = config
+        self.bounds = config['bounds'] if 'bounds' in config else None
+        self.iterations = config['iterations'] if 'iterations' in config else None
+        self.initial_state = config['initial_state'] if 'initial_state' in config else None
+        self.initial_args = config['initial_args'] if 'initial_args' in config else {}
+        self.n = config['n'] if 'n' in config else None
+        self.second_order = config['second_order'] if 'second_order' in config else False
+        self.algorithm_input = config['algorithm_input'] if 'algorithm_input' in config else None
+        self.algorithm = config['algorithm'] if 'algorithm' in config else None
+        self.output_type = config['output_type'] if 'output_type' in config else None
+        self.algorithm_args = config['algorithm_args'] if 'algorithm_args' in config else {}
 
+    def validate(self):
+        ConfigValidator.validate('bounds', self.bounds, dict)
+        ConfigValidator.validate('iterations', self.iterations, int)
+        ConfigValidator.validate('initial_state', self.initial_state, dict)
+        ConfigValidator.validate('initial_args', self.initial_args, dict)
+        ConfigValidator.validate('n', self.n, int)
+        ConfigValidator.validate('second_order', self.second_order, bool)
+        ConfigValidator.validate('algorithm_input', self.algorithm_input, str)
+        ConfigValidator.validate('algorithm', self.algorithm, types.FunctionType)
+        ConfigValidator.validate('output_type', self.output_type, str)
+        ConfigValidator.validate('algorithm_args', self.algorithm_args, dict)
 
 class SensitivityAnalysis(object):
 

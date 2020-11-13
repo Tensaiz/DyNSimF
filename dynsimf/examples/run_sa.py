@@ -47,14 +47,10 @@ if __name__ == "__main__":
         return {'S': model.get_state('S') + constants['p'] * np.maximum(0, constants['S+'] - model.get_state('S')) - constants['h'] * model.get_state('C') - constants['k'] * model.get_state('A')}
 
     def update_E(constants):
-        # return {'E': model.get_state('E') - 0.015}
-        e = np.zeros(len(model.nodes))
-        for i, node in enumerate(model.nodes):
-            neighbor_addiction = 0
-            for neighbor in model.get_neighbors(node):
-                neighbor_addiction += model.get_node_state(neighbor, 'A')
-            e[i] = neighbor_addiction / 50
-        return {'E': np.maximum(-1.5, model.get_state('E') - e)} # Custom calculation
+        adj = model.get_adjacency()
+        summed = np.matmul(adj, model.get_nodes_states())
+        e = summed[:, model.get_state_index('A')] / 50
+        return {'E': np.maximum(-1.5, model.get_state('E') - e)}
 
     def update_V(constants):
         return {'V': np.minimum(1, np.maximum(0, model.get_state('C')-model.get_state('S')-model.get_state('E')))}
@@ -82,7 +78,7 @@ if __name__ == "__main__":
             'iterations': 100,
             'initial_state': initial_state,
             'initial_args': {'constants': model.constants},
-            'n': 2,
+            'n': 25,
             'second_order': True,
 
             'algorithm_input': 'network',

@@ -1,8 +1,11 @@
+from typing import Callable, List
+import types
+
+from dynsimf.models.components.Update import Update
+from dynsimf.models.helpers.ConfigValidator import ConfigValidator
+
 __author__ = "Mathijs Maijer"
 __email__ = "m.f.maijer@gmail.com"
-
-from typing import Callable, List
-from dynsimf.models.components.Update import Update
 
 
 class Scheme(object):
@@ -14,6 +17,14 @@ class Scheme(object):
         self.lower_bound: int = lower_bound
         self.upper_bound: int = upper_bound
         self.updates: List[Update] = updates if updates else []
+        self.validate()
+
+    def validate(self):
+        ConfigValidator.validate('sample_function', self.sample_function, types.FunctionType)
+        ConfigValidator.validate('args', self.args, dict, optional=True)
+        ConfigValidator.validate('lower_bound', self.lower_bound, int, optional=True, variable_range=(0,))
+        ConfigValidator.validate('upper_bound', self.upper_bound, int, optional=True)
+        ConfigValidator.validate('updates', self.updates, list, optional=True)
 
     def add_update(self, update: Update) -> None:
         self.updates.append(update)

@@ -1,4 +1,6 @@
 from enum import Enum
+from dynsimf.models.helpers.ConfigValidator import ConfigValidator
+from dynsimf.models.components.conditions.Condition import Condition
 
 __author__ = "Mathijs Maijer"
 __email__ = "m.f.maijer@gmail.com"
@@ -12,20 +14,23 @@ class UpdateType(Enum):
 class UpdateConfiguration(object):
     """
     Configuration for Updates
-    TODO: Validate attributes
     """
-    def __init__(self, iterable=(), **kwargs):
-        self.set_default()
-        self.__dict__.update(iterable, **kwargs)
+    def __init__(self, config=None):
+        self.set_config(config)
         self.validate()
 
-    def set_default(self):
-        self.arguments = {}
-        self.condition = None
-        self.get_nodes = None
-        self.update_type = UpdateType.STATE
+    def set_config(self, config):
+        self.config = config if config else {}
+        self.arguments = config['arguments'] if 'arguments' in config else {}
+        self.condition = config['condition'] if 'condition' in config else None
+        self.get_nodes = config['get_nodes'] if 'get_nodes' in config else None
+        self.update_type = config['update_type'] if 'update_type' in config else UpdateType.STATE
 
     def validate(self):
+        ConfigValidator.validate('arguments', self.arguments, dict)
+        ConfigValidator.validate('condition', self.condition, Condition, optional=True)
+        ConfigValidator.validate('get_nodes', self.get_nodes, bool, optional=True)
+        ConfigValidator.validate('update_type', self.update_type, UpdateType)
         if not isinstance(self.update_type, UpdateType):
             raise ValueError('Update type should of enum UpdateType')
 

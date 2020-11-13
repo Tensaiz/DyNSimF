@@ -25,7 +25,7 @@ class ConfigValidator(object):
             ValueError: if any of the expected variable type or values does not match
         """
         cls.check_optionality(name, variable, optional)
-        if optional and not variable:
+        if optional and variable is None:
             return
         cls.check_type(name, variable, variable_type)
         if variable_range:
@@ -44,7 +44,7 @@ class ConfigValidator(object):
         Raises:
             ValueError: if the variable is None while optional is False
         """
-        if not optional and not variable:
+        if not optional and variable is None:
             raise ValueError('The variable: ' + name + ' is not optional and should not be None!')
 
     @staticmethod

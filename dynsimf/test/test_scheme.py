@@ -17,7 +17,6 @@ class SchemeTest(unittest.TestCase):
     def test_add_update(self):
         s = Scheme(lambda x: x, {}, lower_bound=0, upper_bound=10, updates=[])
         cfg_options = {
-            'arguments': None,
             'condition': None,
             'get_nodes': False,
             'update_type': UpdateType.STATE
