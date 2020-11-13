@@ -20,13 +20,12 @@ if __name__ == "__main__":
     g = nx.random_geometric_graph(n_nodes, 0.2)
 
     cfg = {
-        'utility': True,
         'adjacency_memory_config': \
             MemoryConfiguration(MemoryConfigurationType.ADJACENCY, {
                 'memory_size': 0
             }),
-        'utility_memory_config': \
-            MemoryConfiguration(MemoryConfigurationType.UTILITY, {
+        'edge_values_memory_config': \
+            MemoryConfiguration(MemoryConfigurationType.EDGE_VALUES, {
                 'memory_size': 0
             })
     }
@@ -59,6 +58,20 @@ if __name__ == "__main__":
     }
 
     def calculate_utility():
+        utility = np.zeros((n_nodes, n_nodes))
+        adjacency = model.get_adjacency()
+        addiction = model.get_state('A')
+
+        for node, neighbors in enumerate(adjacency):
+            node_addiction = addiction[node]
+            neighbor_locations = np.where(neighbors == 1)[0]
+            neighbors_addiction = addiction[neighbor_locations]
+            neighbors_utility = 1 - abs(node_addiction - neighbors_addiction)
+
+            utility[node, neighbor_locations] = neighbors_utility
+        return {'addiction_utility': utility}
+
+    def initial_utility():
         utility = np.zeros((n_nodes, n_nodes))
         adjacency = model.get_adjacency()
         addiction = model.get_state('A')
@@ -126,7 +139,7 @@ if __name__ == "__main__":
             weights = np.exp(weights) / np.sum(np.exp(weights), axis=0)
             selected_neighbor = np.random.choice(neighbors_neighbors, p=weights)
             selected_neighbor_index = np.where(neighbors_neighbors == selected_neighbor)[0]
-            addable_neighbors[node]['add'].append((selected_neighbor, a_utility[selected_neighbor_index], a_utility[selected_neighbor_index]))
+            addable_neighbors[node]['add'].append((selected_neighbor, 'addiction_utility', a_utility[selected_neighbor_index], a_utility[selected_neighbor_index]))
 
         return {
             'edge_change': addable_neighbors
@@ -162,7 +175,11 @@ if __name__ == "__main__":
     model.add_update(update_V, {'constants': model.constants})
     model.add_update(update_A, {'constants': model.constants})
 
-    model.add_utility_update(calculate_utility)
+    model.set_edge_values(['addiction_utility'])
+    model.set_initial_edge_values({
+        'addiction_utility': initial_utility
+    })
+    model.add_edge_values_update(calculate_utility)
 
     condition_threshold_nb_cfg = ThresholdConfiguration(ThresholdOperator.GE, 1)
 
@@ -177,7 +194,6 @@ if __name__ == "__main__":
     model.add_network_update(remove_neighbor, condition=condition_nb_r, get_nodes=True)
 
     model.set_initial_state(initial_state, {'constants': model.constants})
-    model.set_initial_utility(calculate_utility)
 
     output = model.simulate(100)
 
@@ -214,6 +230,7 @@ if __name__ == "__main__":
 
     visualization_config = {
         'plot_interval': 2,
+        'edge_values': 'addiction_utility',
         'initial_positions': nx.get_node_attributes(g, 'pos'),
         'plot_variable': 'A',
         'color_scale': 'Reds',

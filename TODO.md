@@ -32,7 +32,8 @@
 - [x] Threshold state conditions
 - [x] Threshold utility
 - [x] Threshold adjacency (amount of neighbors)
-- [ ] Rework to edge values dictionary
+- [x] Rework to edge values dictionary
+- [ ] Implement node removal and adding
 
 ### Utility
 - [ ] Implement utility maximisation

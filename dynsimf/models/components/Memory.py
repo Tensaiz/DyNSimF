@@ -10,7 +10,7 @@ class MemoryConfigurationType(Enum):
     STATE = 0
     ADJACENCY = 1
     UTILITY = 2
-
+    EDGE_VALUES = 3
 
 class MemoryConfiguration(object):
     """A configuration for storing and writing utility/states/graph

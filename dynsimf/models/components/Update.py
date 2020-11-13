@@ -10,6 +10,7 @@ class UpdateType(Enum):
     STATE = 0
     UTILITY = 1
     NETWORK = 2
+    EDGE_VALUES = 3
 
 class UpdateConfiguration(object):
     """

@@ -12,7 +12,7 @@ class ConditionType(Enum):
     ADJACENCY = 1
     UTILITY = 2
     CUSTOM = 3
-
+    EDGE_VALUES = 4
 
 class Condition(metaclass=ABCMeta):
     """

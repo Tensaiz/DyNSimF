@@ -38,6 +38,7 @@ class VisualizationConfiguration(object):
         self.layout = config['layout'] if 'layout' in config else None
         self.layout_params = config['layout_params'] if 'layout_params' in config else None
         self.edge_alpha = config['edge_alpha'] if 'edge_alpha' in config else 0.5
+        self.edge_values = config['edge_values'] if 'edge_values' in config else None
 
         if 'variable_limits' not in config:
             self.variable_limits = {state: [-1, 1] for state in config['state_names']}
@@ -66,18 +67,21 @@ class VisualizationConfiguration(object):
             ConfigValidator.check_types('layout', self.layout, [str, types.FunctionType])
         ConfigValidator.validate('layout_params', self.layout_params, dict, optional=True)
         ConfigValidator.validate('edge_alpha', self.edge_alpha, float, variable_range=(0, 1))
+        ConfigValidator.validate('edge_values', self.edge_values, str, optional=True)
 
 class Visualizer(object):
     """
     Visualizer class handling animations and plotting
     """
-    def __init__(self, config, graph, state_map, model_output):
+    def __init__(self, config, graph, state_map, model_output, edge_values_map=None):
         self.config = config
         self.graph = graph
         self.state_map = state_map
+        self.edge_values_map = edge_values_map
         self.states = model_output['states']
         self.utilities = model_output['utility']
         self.adjacencies = model_output['adjacency']
+        self.edge_values = model_output['edge_values']
         self.create_locations()
         self.max_iteration = self.get_total_iterations()
 
@@ -229,8 +233,13 @@ class Visualizer(object):
                 # self.graph = nx.convert_matrix.from_numpy_array(self.adjacencies[locations_index])
                 graph = self.graphs[locations_index]
                 pos = self.locations[locations_index]
-                if locations_index in self.utilities:
-                    edge_color = self.utilities[locations_index].flatten()[self.utilities[locations_index].flatten().nonzero()[0]]
+                if self.config.edge_values:
+                    if locations_index in self.edge_values:
+                        current_edge_values = self.edge_values[locations_index][self.edge_values_map[self.config.edge_values]]
+                        edge_color = current_edge_values.flatten()[current_edge_values.flatten().nonzero()[0]]
+                else:
+                    if locations_index in self.utilities:
+                        edge_color = self.utilities[locations_index].flatten()[self.utilities[locations_index].flatten().nonzero()[0]]
             else:
                 pos = self.static_locations
                 graph = self.graph
