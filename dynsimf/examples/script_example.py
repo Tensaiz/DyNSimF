@@ -11,8 +11,6 @@ from dynsimf.models.components.conditions.ThresholdCondition import ThresholdCon
 from dynsimf.models.components.conditions.CustomCondition import CustomCondition
 from dynsimf.models.components.conditions.ThresholdCondition import ThresholdOperator
 from dynsimf.models.components.conditions.ThresholdCondition import ThresholdConfiguration
-from dynsimf.models.components.conditions.StochasticCondition import StochasticCondition
-
 
 if __name__ == "__main__":
     # Network definition

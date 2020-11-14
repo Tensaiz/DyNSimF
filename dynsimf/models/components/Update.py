@@ -22,10 +22,10 @@ class UpdateConfiguration(object):
 
     def set_config(self, config):
         self.config = config if config else {}
-        self.arguments = config['arguments'] if 'arguments' in config else {}
-        self.condition = config['condition'] if 'condition' in config else None
-        self.get_nodes = config['get_nodes'] if 'get_nodes' in config else None
-        self.update_type = config['update_type'] if 'update_type' in config else UpdateType.STATE
+        self.arguments = config['arguments'] if 'arguments' in self.config else {}
+        self.condition = config['condition'] if 'condition' in self.config else None
+        self.get_nodes = config['get_nodes'] if 'get_nodes' in self.config else None
+        self.update_type = config['update_type'] if 'update_type' in self.config else UpdateType.STATE
 
     def validate(self):
         ConfigValidator.validate('arguments', self.arguments, dict)

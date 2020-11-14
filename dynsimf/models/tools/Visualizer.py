@@ -37,7 +37,7 @@ class VisualizationConfiguration(object):
         self.plot_title = config['plot_title'] if 'plot_title' in config else 'Network visualization'
         self.layout = config['layout'] if 'layout' in config else None
         self.layout_params = config['layout_params'] if 'layout_params' in config else None
-        self.edge_alpha = config['edge_alpha'] if 'edge_alpha' in config else 0.5
+        self.edge_alpha = config['edge_alpha'] if 'edge_alpha' in config else 0.2
         self.edge_values = config['edge_values'] if 'edge_values' in config else None
 
         if 'variable_limits' not in config:
@@ -73,7 +73,8 @@ class Visualizer(object):
     """
     Visualizer class handling animations and plotting
     """
-    def __init__(self, config, graph, state_map, model_output, edge_values_map=None):
+    def __init__(self, config, model_input):
+        graph, state_map, model_output, edge_values_map = model_input
         self.config = config
         self.graph = graph
         self.state_map = state_map

@@ -95,9 +95,9 @@ class HIOM(Example):
         s_I = Update(shrink_I)
         s_A = Update(shrink_A)
 
-        self.model.add_scheme(Scheme(sample_attention_weighted, {'graph': self.model.graph}, updates=[up_I_A]))
-        self.model.add_scheme(Scheme(lambda graph: graph.nodes, {'graph': self.model.graph}, lower_bound=5000, updates=[s_I]))
-        self.model.add_scheme(Scheme(lambda graph: graph.nodes, {'graph': self.model.graph}, lower_bound=10000, updates=[s_A]))
+        self.model.add_scheme(Scheme(sample_attention_weighted, {'args': {'graph': self.model.graph}, 'updates': [up_I_A]}))
+        self.model.add_scheme(Scheme(lambda graph: graph.nodes, {'args': {'graph': self.model.graph}, 'lower_bound': 5000, 'updates': [s_I]}))
+        self.model.add_scheme(Scheme(lambda graph: graph.nodes, {'args': {'graph': self.model.graph}, 'lower_bound': 10000, 'updates': [s_A]}))
         self.model.add_update(update_A, {'constants': self.model.constants})
         self.model.add_update(update_O, {'constants': self.model.constants})
 

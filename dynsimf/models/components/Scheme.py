@@ -9,14 +9,12 @@ __email__ = "m.f.maijer@gmail.com"
 
 
 class Scheme(object):
-    def __init__(self, sample_function: Callable, args: dict = None,
-                 lower_bound: int = None, upper_bound: int = None,
-                 updates: list = None):
+    def __init__(self, sample_function: Callable, config: dict):
         self.sample_function: Callable = sample_function
-        self.args: dict = args if args else {}
-        self.lower_bound: int = lower_bound
-        self.upper_bound: int = upper_bound
-        self.updates: List[Update] = updates if updates else []
+        self.args: dict = config['args'] if 'args' in config else {}
+        self.lower_bound: int = config['lower_bound'] if 'lower_bound' in config else None
+        self.upper_bound: int = config['upper_bound'] if 'upper_bound' in config else None
+        self.updates: List[Update] = config['updates'] if 'updates' in config else []
         self.validate()
 
     def validate(self):

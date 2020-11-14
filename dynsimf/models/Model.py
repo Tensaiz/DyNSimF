@@ -573,7 +573,8 @@ class Model(object, metaclass=ABCMeta):
     def configure_visualization(self, options, output):
         options['state_names'] = self.state_names
         configuration = VisualizationConfiguration(options)
-        self.visualizer = Visualizer(configuration, self.graph, self.state_map, output, edge_values_map=self.edge_values_map)
+        model_input = (self.graph, self.state_map, output, self.edge_values_map)
+        self.visualizer = Visualizer(configuration, model_input)
 
     def visualize(self, vis_type):
         self.visualizer.visualize(vis_type)
@@ -588,7 +589,7 @@ class Model(object, metaclass=ABCMeta):
         self.property_functions = []
         self.properties = {}
 
-        self.schemes: List[Scheme] = [Scheme(lambda graph: graph.nodes, {'graph': self.graph}, lower_bound=0)]
+        self.schemes: List[Scheme] = [Scheme(lambda graph: graph.nodes, {'args': {'graph': self.graph}, 'lower_bound': 0})]
 
         self.edge_utility = np.array([])
         self.new_edge_utility = np.array([])
