@@ -80,7 +80,7 @@ class Model(object, metaclass=ABCMeta):
         self.graph_changed = False
         self.adjacency = nx.convert_matrix.to_numpy_array(self.graph)
         self.new_adjacency = self.adjacency[:].copy()
-        self.graph = nx.convert_matrix.from_numpy_array(self.adjacency, create_using=nx.DiGraph)
+        self.graph = nx.convert_matrix.from_numpy_array(self.adjacency)
         self.new_graph = copy.deepcopy(self.graph)
         if self.config.utility:
             self.initialize_utility()
@@ -563,7 +563,7 @@ class Model(object, metaclass=ABCMeta):
 
         if self.graph_changed:
             self.adjacency = self.new_adjacency[:].copy()
-            self.new_graph = nx.convert_matrix.from_numpy_array(self.new_adjacency, create_using=nx.DiGraph)
+            self.new_graph = nx.convert_matrix.from_numpy_array(self.new_adjacency)
             self.graph = self.new_graph.copy()
 
     def prepare_next_iteration(self):
