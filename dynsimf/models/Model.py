@@ -4,14 +4,14 @@ import copy
 import numpy as np
 import networkx as nx
 
-from dynsimf.models.Memory import MemoryConfiguration
-from dynsimf.models.Memory import MemoryConfigurationType
-from dynsimf.models.Update import Update
-from dynsimf.models.Update import UpdateType
-from dynsimf.models.Update import UpdateConfiguration
-from dynsimf.models.Scheme import Scheme
-from dynsimf.models.Visualizer import VisualizationConfiguration
-from dynsimf.models.Visualizer import Visualizer
+from dynsimf.models.components.Memory import MemoryConfiguration
+from dynsimf.models.components.Memory import MemoryConfigurationType
+from dynsimf.models.components.Update import Update
+from dynsimf.models.components.Update import UpdateType
+from dynsimf.models.components.Update import UpdateConfiguration
+from dynsimf.models.components.Scheme import Scheme
+from dynsimf.models.tools.Visualizer import VisualizationConfiguration
+from dynsimf.models.tools.Visualizer import Visualizer
 
 from typing import List
 
@@ -46,6 +46,12 @@ class ModelConfiguration(object):
             }) \
             if 'adjacency_memory_config' not in cfg_keys \
             else cfg['adjacency_memory_config']
+        self.edge_values_memory_config = \
+            MemoryConfiguration(MemoryConfigurationType.EDGE_VALUES, {
+                'memory_size': -1
+            }) \
+            if 'adjacency_memory_config' not in cfg_keys \
+            else cfg['adjacency_memory_config']
 
 class Model(object, metaclass=ABCMeta):
     """
@@ -53,7 +59,6 @@ class Model(object, metaclass=ABCMeta):
     """
     def __init__(self, graph, config=None, seed=None):
         self.graph = graph
-        self.new_graph = copy.deepcopy(graph)
         self.config = config if config else ModelConfiguration()
         self.clear()
         self.init()
@@ -74,19 +79,28 @@ class Model(object, metaclass=ABCMeta):
     def init(self):
         self.graph_changed = False
         self.adjacency = nx.convert_matrix.to_numpy_array(self.graph)
-        self.new_adjacency = self.adjacency[:]
+        self.new_adjacency = self.adjacency[:].copy()
+        self.graph = nx.convert_matrix.from_numpy_array(self.adjacency)
+        self.new_graph = copy.deepcopy(self.graph)
         if self.config.utility:
             self.initialize_utility()
 
     def add_property_function(self, fun):
         self.property_functions.append(fun)
 
-    def set_states(self, states):
-        self.node_states = np.zeros((len(self.graph.nodes()), len(states)))
-        self.new_node_states = self.node_states[:]
-        self.state_names = states
-        for i, state in enumerate(states):
+    def set_states(self, state_names):
+        self.node_states = np.zeros((len(self.graph.nodes()), len(state_names)))
+        self.new_node_states = self.node_states[:].copy()
+        self.state_names = state_names
+        for i, state in enumerate(state_names):
             self.state_map[state] = i
+
+    def set_edge_values(self, edge_values_names):
+        self.edge_values = np.zeros((len(edge_values_names), len(self.graph.nodes()), len(self.graph.nodes())))
+        self.new_edge_values = self.edge_values[:].copy()
+        self.edge_values_names = edge_values_names
+        for i, edge_values_name in enumerate(edge_values_names):
+            self.edge_values_map[edge_values_name] = i
 
     def set_initial_state(self, initial_state, args=None):
         arguments = args if args else {}
@@ -96,12 +110,22 @@ class Model(object, metaclass=ABCMeta):
                 self.node_states[:, self.state_map[state]] = val(**arguments)
             else:
                 self.node_states[:, self.state_map[state]] = val
-        self.new_node_states = self.node_states[:]
+        self.new_node_states = self.node_states[:].copy()
+
+    def set_initial_edge_values(self, initial_edge_values, args=None):
+        arguments = args if args else {}
+        for edge_value_name in initial_edge_values.keys():
+            val = initial_edge_values[edge_value_name]
+            if hasattr(val, '__call__'):
+                self.edge_values[self.edge_values_map[edge_value_name], :, :] = val(**arguments)
+            else:
+                self.edge_values[self.edge_values_map[edge_value_name], :, :] = val
+        self.new_edge_values = self.edge_values[:].copy()
 
     def initialize_utility(self):
         n_nodes = len(self.graph.nodes())
         self.edge_utility = np.zeros((n_nodes, n_nodes))
-        self.new_edge_utility = self.edge_utility[:]
+        self.new_edge_utility = self.edge_utility[:].copy()
 
     def get_utility(self):
         return self.edge_utility
@@ -112,7 +136,7 @@ class Model(object, metaclass=ABCMeta):
     def set_initial_utility(self, init_function, params=None):
         params = params if params else {}
         self.edge_utility = init_function(*params)
-        self.new_edge_utility = self.edge_utility[:]
+        self.new_edge_utility = self.edge_utility[:].copy()
 
     def get_state_index(self, state):
         return self.state_map[state]
@@ -179,6 +203,9 @@ class Model(object, metaclass=ABCMeta):
     def add_network_update(self, fun, args=None, condition=None, get_nodes=False):
         self.add_update(fun, args, condition, get_nodes, UpdateType.NETWORK)
 
+    def add_edge_values_update(self, fun, args=None, condition=None, get_nodes=False):
+        self.add_update(fun, args, condition, get_nodes, UpdateType.EDGE_VALUES)
+
     def create_update(self, update_content):
         fun, arguments, condition, get_nodes, update_type = update_content
         cfg_options = {
@@ -206,20 +233,31 @@ class Model(object, metaclass=ABCMeta):
     def get_nodes_adjacency(self, nodes):
         return self.adjacency[nodes]
 
-    def get_all_neighbors(self):
-        neighbors = []
-        for node in list(self.graph.nodes()):
-            neighbors.append(self.get_neighbors(node))
-        return neighbors
-
     def get_neighbors(self, node):
         return list(self.graph.neighbors(node))
+
+    def get_neighbors_neighbors_adjacency_matrix(self):
+        adj_neighbors_neighbors = self.adjacency @ self.adjacency
+        # Doesn't matter how many connections are shared
+        adj_neighbors_neighbors[adj_neighbors_neighbors > 0] = 1
+        # Remove direct neighbors
+        adj_neighbors_neighbors = adj_neighbors_neighbors - self.adjacency
+        # Clean matrix
+        adj_neighbors_neighbors[adj_neighbors_neighbors < 0] = 0
+        # Can't have connection to yourself
+        np.fill_diagonal(adj_neighbors_neighbors, 0)
+        return adj_neighbors_neighbors
+
+    def get_neighbors_neighbors(self, node):
+        neighbors_neighbors_matrix = self.get_neighbors_neighbors_adjacency_matrix()
+        return np.array(self.graph.nodes)[np.where(neighbors_neighbors_matrix[node] > 0)[0]]
 
     def simulate(self, n, show_tqdm=True):
         self.simulation_output = {
             'states': {},
             'adjacency': {},
-            'utility': {}
+            'utility': {},
+            'edge_values': {}
         }
         self.prepare_output(n)
         self.simulation_steps(n, show_tqdm)
@@ -270,6 +308,9 @@ class Model(object, metaclass=ABCMeta):
             f.write('# Iteration {0} - ({1}, {2})\n'.format(self.current_iteration, n_nodes, n_nodes))
             np.savetxt(f, self.edge_utility)
 
+    def write_edge_values_iteration(self, n_nodes):
+        pass
+
     def write_adjacency_iteration(self, n_nodes):
         with open(self.config.adjacency_memory_config.path, 'a') as f:
             f.write('# Iteration {0} - ({1}, {2})\n'.format(self.current_iteration, n_nodes, n_nodes))
@@ -279,12 +320,19 @@ class Model(object, metaclass=ABCMeta):
         self.store_states_iteration()
         self.store_utility_iteration()
         self.store_adjacency_iteration()
+        self.store_edge_values_iteration()
 
     def store_states_iteration(self):
         if self.config.state_memory_config.memory_size != -1 and self.current_iteration % self.config.state_memory_config.memory_interval == 0:
             self.simulation_output['states'][self.current_iteration] = copy.deepcopy(self.node_states)
         if self.config.state_memory_config.memory_size > 0 and len(self.simulation_output) > self.config.state_memory_config.memory_size:
             self.simulation_output['states'] = {}
+
+    def store_edge_values_iteration(self):
+        if self.config.edge_values_memory_config.memory_size != -1 and self.current_iteration % self.config.edge_values_memory_config.memory_interval == 0:
+            self.simulation_output['edge_values'][self.current_iteration] = copy.deepcopy(self.edge_values)
+        if self.config.edge_values_memory_config.memory_size > 0 and len(self.simulation_output) > self.config.edge_values_memory_config.memory_size:
+            self.simulation_output['edge_values'] = {}
 
     def store_utility_iteration(self):
         if self.config.utility_memory_config.memory_size != -1 and self.current_iteration % self.config.utility_memory_config.memory_interval == 0:
@@ -325,9 +373,11 @@ class Model(object, metaclass=ABCMeta):
         if update.update_type == UpdateType.STATE:
             self.update_state(update_nodes, updatables)
         elif update.update_type == UpdateType.UTILITY:
-            self.update_utility(update_nodes, update_nodes)
+            self.update_utility(update_nodes, updatables)
         elif update.update_type == UpdateType.NETWORK:
             self.update_network(update_nodes, updatables)
+        elif update.update_type == UpdateType.EDGE_VALUES:
+            self.update_edge_values(update_nodes, updatables)
 
     def update_state(self, nodes, updatables):
         for state, update_output in updatables.items():
@@ -348,6 +398,10 @@ class Model(object, metaclass=ABCMeta):
         for (origin, neighbor, utility) in utility_list:
             self.new_edge_utility[origin, neighbor] = utility
 
+    def update_edge_values(self, update_nodes, updatables):
+        for edge_values_name, update_output in updatables.items():
+            self.new_edge_values[self.edge_values_map[edge_values_name], update_nodes] = update_output
+
     def update_network(self, update_nodes, updatables):
         for network_update_type, change in updatables.items():
             self.assign_network_operation(network_update_type, change, update_nodes)
@@ -362,7 +416,7 @@ class Model(object, metaclass=ABCMeta):
 
     def network_nodes_remove(self, removable_nodes, update_nodes):
         self.new_node_states = np.delete(self.new_node_states, removable_nodes, axis=0)
-        self.delete_rows_columns('new_edge_utility', removable_nodes)
+        # self.delete_rows_columns('new_edge_utility', removable_nodes)
         self.delete_rows_columns('new_adjacency', removable_nodes)
 
     def delete_rows_columns(self, var, removables):
@@ -386,8 +440,8 @@ class Model(object, metaclass=ABCMeta):
         """
         self.new_adjacency = np.vstack([self.new_adjacency, np.zeros(len(self.new_adjacency))])
         self.new_adjacency = np.append(self.new_adjacency, np.zeros((len(self.new_adjacency), 1)), axis=1)
-        self.new_edge_utility = np.vstack([self.new_edge_utility, np.zeros(len(self.new_adjacency))])
-        self.new_edge_utility = np.append(self.new_edge_utility, np.zeros((len(self.new_adjacency), 1)), axis=1)
+        # self.new_edge_utility = np.vstack([self.new_edge_utility, np.zeros(len(self.new_adjacency))])
+        # self.new_edge_utility = np.append(self.new_edge_utility, np.zeros((len(self.new_adjacency), 1)), axis=1)
         self.new_node_states = np.vstack([self.new_node_states, np.zeros(len(self.state_names))])
         self.graph_changed = True
 
@@ -395,11 +449,11 @@ class Model(object, metaclass=ABCMeta):
         """
         :param index int: The index of the node in the graph
         :param node dict: a node dictionary of the form:
-            key (str): 'neighbors', value (list[tuple]): (neighbor_index, utility_in, utility_out)
+            key (str): 'neighbors', value (list[tuple]): (neighbor_index, edge_values_name values_in, values_out)
             key (str): 'states', value (dict): { 'state_name' (str) : state_value (number) }
         Initialize a node by setting the utility of the neighbors and setting the node states
         """
-        self.set_node_neighbor_utilities(index, node['neighbors'])
+        self.set_node_neighbor_values(index, node['neighbors'])
         self.set_new_node_states(index, node['states'])
 
     def set_new_node_states(self, index, states):
@@ -415,10 +469,9 @@ class Model(object, metaclass=ABCMeta):
                     self.handle_adjacency_node_add(origin, neighbors)
                 elif adjacency_change_type == 'remove':
                     self.handle_adjacency_node_remove(origin, neighbors)
-
     def handle_adjacency_node_overwrite(self, origin, neighbors):
         """
-        neighbors variable format: (neighbor_index, origin_to_neighbor_utility, neighbor_to_origin_utility)
+        neighbors variable format: (neighbor_index, edge_variable_name, origin_to_neighbor_val, neighbor_to_origin_val)
         """
         neighbor_indices = self.neighbor_update_to_var('indices', neighbors)
         # Clear node current neighbors
@@ -429,55 +482,57 @@ class Model(object, metaclass=ABCMeta):
         self.new_adjacency[origin, neighbor_indices] = 1
         # Set neighbors -> node adjacency
         self.new_adjacency[neighbor_indices, origin] = 1
-        # Clear all ingoing and outgoing utility
-        self.new_edge_utility[origin] = 0
-        self.new_edge_utility[:, origin] = 0
+        # Clear all ingoing and outgoing edge values
+        for edge_value_name in self.edge_values_names:
+            self.new_edge_values[self.edge_values_map[edge_value_name], origin] = 0
+            self.new_edge_values[self.edge_values_map[edge_value_name], :, origin] = 0
         # Set given utility
-        self.set_node_neighbor_utilities(origin, neighbors)
+        self.set_node_neighbor_values(origin, neighbors)
         self.graph_changed = True
 
     def handle_adjacency_node_add(self, origin, neighbors):
         neighbor_indices = self.neighbor_update_to_var('indices', neighbors)
         self.new_adjacency[origin, neighbor_indices] = 1
         self.new_adjacency[neighbor_indices, origin] = 1
-        self.set_node_neighbor_utilities(origin, neighbors)
+        self.set_node_neighbor_values(origin, neighbors)
         self.graph_changed = True
+
+    def set_node_neighbor_values(self, origin, neighbors):
+        neighbor_indices = self.neighbor_update_to_var('indices', neighbors)
+        edge_value_names = self.neighbor_update_to_var('names', neighbors)
+        neighbor_ingoing_values = self.neighbor_update_to_var('ingoing_values', neighbors)
+        neighbor_outgoing_values = self.neighbor_update_to_var('outgoing_values', neighbors)
+        self.new_edge_values[edge_value_names, origin, neighbor_indices] = neighbor_outgoing_values
+        self.new_edge_values[edge_value_names, neighbor_indices, origin] = neighbor_ingoing_values
 
     def handle_adjacency_node_remove(self, origin, neighbors):
         self.new_adjacency[origin, neighbors] = 0
         self.new_adjacency[neighbors, origin] = 0
-        self.new_edge_utility[origin, neighbors] = 0
-        self.new_edge_utility[neighbors, origin] = 0
+        for edge_value_name in self.edge_values_names:
+            self.new_edge_values[self.edge_values_map[edge_value_name], origin, neighbors] = 0
+            self.new_edge_values[self.edge_values_map[edge_value_name], neighbors, origin] = 0
         self.graph_changed = True
-
-    def set_node_neighbor_utilities(self, origin, neighbors):
-        neighbor_indices = self.neighbor_update_to_var('indices', neighbors)
-        neighbor_outgoing_utility = self.neighbor_update_to_var('ingoing_utility', neighbors)
-        neighbor_ingoing_utility = self.neighbor_update_to_var('outgoing_utility', neighbors)
-        self.new_edge_utility[origin, neighbor_indices] = neighbor_outgoing_utility
-        self.new_edge_utility[neighbor_indices, origin] = neighbor_ingoing_utility
 
     def neighbor_update_to_var(self, var_type, neighbors):
         """
-        Get a list of neighbor indices, ingoing utililty values, or outgoing utility values
-        The input format is: [(neighbor index, utility_in, utility_out)]
+        Get a list of neighbor indices, edge value names ingoing edge values, or outgoing edge values
+        The input format is: [(neighbor index, edge_value_var, value_in, value_out)]
         If a value is not set, a 0 is returned for that neighbor
         """
         if var_type == 'indices':
             return [neighbor[0] if (isinstance(neighbor, tuple) or isinstance(neighbor, list)) \
                     else neighbor \
                     for neighbor in neighbors]
-
-        elif var_type == 'ingoing_utility':
-            return [neighbor[1] if (isinstance(neighbor, tuple) or isinstance(neighbor, list)) \
+        elif var_type == 'names':
+            return [self.edge_values_map[neighbor[1]] for neighbor in neighbors]
+        elif var_type == 'ingoing_values':
+            return [neighbor[2] if (isinstance(neighbor, tuple) or isinstance(neighbor, list)) \
                     else 0 \
                     for neighbor in neighbors]
-
-        elif var_type == 'outgoing_utility':
-            return [neighbor[2] if ((isinstance(neighbor, tuple) or isinstance(neighbor, list)) and len(neighbor) == 3) \
+        elif var_type == 'outgoing_values':
+            return [neighbor[3] if ((isinstance(neighbor, tuple) or isinstance(neighbor, list)) and len(neighbor) == 4) \
                     else 0 \
                     for neighbor in neighbors]
-
 
     def inactive_scheme(self, scheme):
         if scheme.lower_bound and scheme.lower_bound > self.current_iteration:
@@ -502,11 +557,12 @@ class Model(object, metaclass=ABCMeta):
         return update.condition.get_valid_nodes((scheme_nodes, self.node_states, self.adjacency, self.edge_utility))
 
     def iteration_assignment(self):
-        self.node_states = self.new_node_states[:]
-        self.edge_utility = self.new_edge_utility[:]
+        self.node_states = self.new_node_states[:].copy()
+        self.edge_utility = self.new_edge_utility[:].copy()
+        self.edge_values = self.new_edge_values[:].copy()
 
         if self.graph_changed:
-            self.adjacency = self.new_adjacency[:]
+            self.adjacency = self.new_adjacency[:].copy()
             self.new_graph = nx.convert_matrix.from_numpy_array(self.new_adjacency)
             self.graph = self.new_graph.copy()
 
@@ -515,8 +571,10 @@ class Model(object, metaclass=ABCMeta):
         self.graph_changed = False
 
     def configure_visualization(self, options, output):
+        options['state_names'] = self.state_names
         configuration = VisualizationConfiguration(options)
-        self.visualizer = Visualizer(configuration, self.graph, self.state_map, output)
+        model_input = (self.graph, self.state_map, output, self.edge_values_map)
+        self.visualizer = Visualizer(configuration, model_input)
 
     def visualize(self, vis_type):
         self.visualizer.visualize(vis_type)
@@ -531,15 +589,24 @@ class Model(object, metaclass=ABCMeta):
         self.property_functions = []
         self.properties = {}
 
-        self.schemes: List[Scheme] = [Scheme(lambda graph: graph.nodes, {'graph': self.graph}, lower_bound=0)]
+        self.schemes: List[Scheme] = [Scheme(lambda graph: graph.nodes, {'args': {'graph': self.graph}, 'lower_bound': 0})]
 
         self.edge_utility = np.array([])
         self.new_edge_utility = np.array([])
+
+        self.edge_values_map = {}
+        self.edge_values_names = []
+        self.edge_values = np.array([])
+        self.new_edge_values = np.array([])
 
         self.current_iteration = 0
 
     def reset(self):
         # Add more model variables here
         self.node_states = np.zeros((len(self.graph.nodes()), len(self.state_names)))
-        self.new_node_states = self.node_states[:]
+        self.new_node_states = self.node_states[:].copy()
+
+        self.edge_values = np.zeros((len(self.graph.nodes()), len(self.graph.nodes()), len(self.edge_values_names)))
+        self.new_edge_values = self.edge_values[:].copy()
+
         self.current_iteration = 0

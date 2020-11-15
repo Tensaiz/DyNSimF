@@ -1,5 +1,5 @@
 from dynsimf.models.ExampleRunner import ExampleRunner
-# from dynsimf.models.Visualizer import Visualizer
+# from dynsimf.models.tools.Visualizer import Visualizer
 
 __author__ = "Mathijs Maijer"
 __email__ = "m.f.maijer@gmail.com"

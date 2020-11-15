@@ -1,9 +1,10 @@
 # TODO
 
 ## General
+- [x] Rename/relocate project
 - [ ] Add validation to all class members and throw meaningful warnings
+  - [x] Add validation to configs
 - [ ] Add enums where applicable
-- [ ] Rename/relocate project
 
 ## Model
 - [x] Create scheme class
@@ -20,7 +21,9 @@
 - [ ] Multi process update functions per iteration
 
 ## Dynamic network utility layer
-### Utility
+
+
+### Edge values
 - [x] Utility per edge
 - [x] Utility change
   - [x] NxN matrix
@@ -29,6 +32,12 @@
 - [x] Threshold state conditions
 - [x] Threshold utility
 - [x] Threshold adjacency (amount of neighbors)
+- [x] Rework to edge values dictionary
+- [ ] Implement node removal and adding
+
+### Utility
+- [ ] Implement utility maximisation
+- [ ] Implement cost function(s)
 
 ### Network updating
 <!-- - [ ] Order update dictionary -> First utility then network? -->
@@ -39,6 +48,8 @@
   - [x] Add
   - [x] Remove
   - [x] Optional utility init
+  - [ ] New adjacency matrix
+    - [ ] New utility matrix for init
 - [x] Add nodes
   - [x] Optional state init
   - [x] Optional edges 
@@ -52,6 +63,9 @@
 - [x] Add support for conditions
 - [x] Set all chained condition state indices
 
+## Conditions
+- [x] Custom condition
+
 ## Examples
 - [x] Add example runner
 - [ ] Add example param specification
@@ -64,15 +78,17 @@
   - [x] Min / Max
   - [x] Network metrics
   - [x] Custom function
+- [ ] Rework to take model refactoring into account
 - [ ] Add parallel processing
 
 ## Visualization
 - [x] Add more layout and networkx layout support
 - [x] Deal with different dimensions when writing
 - [x] Reconfiguration visualization
+- [x] More consistent network update locations
 - [x] Read states from disk
   - [ ] Rework for dictionary format
-- [ ] Visualize utility
+- [x] Visualize utility
 - [ ] Add regular plots / trends
 - [ ] Optimize animation if possible
 - [ ] Support jupyter notebook

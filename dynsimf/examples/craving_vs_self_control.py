@@ -11,11 +11,11 @@ class CravingSelfControl(Example):
 
     def __init__(self):
         # Network definition
-        g = nx.random_geometric_graph(250, 0.125)
+        self.g = nx.random_geometric_graph(250, 0.125)
         cfg = {
             'utility': False,
         }
-        self.model = Model(g, ModelConfiguration(cfg))
+        self.model = Model(self.g, ModelConfiguration(cfg))
 
         constants = {
             'q': 0.8,
@@ -131,6 +131,7 @@ class CravingSelfControl(Example):
     def visualize(self, iterations):
         visualization_config = {
             'plot_interval': 2,
+            'initial_positions': nx.get_node_attributes(self.g, 'pos'),
             'plot_variable': 'A',
             'color_scale': 'RdBu',
             'variable_limits': {
