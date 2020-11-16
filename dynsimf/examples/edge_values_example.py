@@ -56,7 +56,6 @@ if __name__ == "__main__":
     }
 
     def calculate_utility():
-        utility = np.zeros((n_nodes, n_nodes))
         adjacency = model.get_adjacency()
         addiction = model.get_state('A')
 
@@ -67,8 +66,6 @@ if __name__ == "__main__":
         return {'addiction_utility': utility}
 
     def initial_utility():
-        utility = np.zeros((n_nodes, n_nodes))
-
         adjacency = model.get_adjacency()
         addiction = model.get_state('A')
 

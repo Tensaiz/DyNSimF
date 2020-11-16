@@ -87,7 +87,6 @@ if __name__ == "__main__":
     model.set_initial_state(initial_state, {'constants': model.constants})
 
     def utility_calculation():
-        utility = np.zeros((n_nodes, n_nodes))
         addiction = model.get_state('A')
         utility = (1 - abs(addiction[..., None] - addiction))
         np.fill_diagonal(utility, 0)

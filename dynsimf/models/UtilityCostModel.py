@@ -4,8 +4,6 @@ from enum import Enum
 import numpy as np
 
 from dynsimf.models.Model import Model
-from dynsimf.models.components.Update import Update
-from dynsimf.models.components.Update import UpdateType
 
 from typing import List
 
