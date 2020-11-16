@@ -147,8 +147,8 @@ if __name__ == "__main__":
     visualization_config = {
         'plot_interval': 2,
         'initial_positions': nx.get_node_attributes(g, 'pos'),
-        # 'plot_variable': 'A',
-        'plot_variable': 'utility',
+        'plot_variable': 'A',
+        # 'plot_variable': 'utility',
         'color_scale': 'Reds',
         'variable_limits': {
             'A': [0, 0.8],
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         # 'show_plot': True,
         'repeat': True,
         'save_fps': 2,
-        'plot_output': '../animations/c_vs_s_utility_fof.gif',
+        # 'plot_output': '../animations/c_vs_s_addiction.gif',
         'plot_title': 'Self control vs craving simulation'
     }
 

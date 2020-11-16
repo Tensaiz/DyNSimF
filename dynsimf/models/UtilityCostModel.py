@@ -28,8 +28,19 @@ class UtilityCostModel(Model):
     def __init__(self, graph, cost_threshold, config=None, seed=None):
         super().__init__(graph, config, seed)
         self.cost_threshold = cost_threshold
+        self.initialize_user_input()
         self.initialize_utility()
         self.initialize_cost()
+
+    def initialize_user_input(self):
+        self.utility_function = None
+        self.utility_function_type = None
+
+        self.cost_function = None
+        self.cost_function_type = None
+
+        self.sample_method = None
+        self.custom_sample_function = None
 
     def initialize_utility(self):
         n_nodes = len(self.graph.nodes())
@@ -64,7 +75,7 @@ class UtilityCostModel(Model):
     """
 
     def simulate(self, n, show_tqdm=True):
-        # Check whether utility / cost has been set here
+        self.check_user_input_set()
         self.simulation_output = {
             'states': {},
             'adjacency': {},
@@ -75,6 +86,16 @@ class UtilityCostModel(Model):
         self.prepare_simulation()
         super().simulation_steps(n, show_tqdm)
         return self.simulation_output
+
+    def check_user_input_set(self):
+        if self.utility_function is None or self.utility_function_type is None:
+            raise ValueError('The utility function and function type should be set using the `add_utility_function` function, before calling simulate!')
+
+        if self.cost_function is None or self.cost_function_type is None:
+            raise ValueError('The cost function and function type should be set using the `add_cost_function` function, before calling simulate!')
+
+        if self.sample_method is None:
+            raise ValueError('The sample method must be set using the `set_sampling_function` function, before calling simulate!')
 
     def prepare_simulation(self):
         self.calculate_utility()
