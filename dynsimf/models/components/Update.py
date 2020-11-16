@@ -8,9 +8,8 @@ __email__ = "m.f.maijer@gmail.com"
 
 class UpdateType(Enum):
     STATE = 0
-    UTILITY = 1
-    NETWORK = 2
-    EDGE_VALUES = 3
+    NETWORK = 1
+    EDGE_VALUES = 2
 
 class UpdateConfiguration(object):
     """

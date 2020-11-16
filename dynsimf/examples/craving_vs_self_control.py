@@ -133,7 +133,7 @@ class CravingSelfControl(Example):
             'plot_interval': 2,
             'initial_positions': nx.get_node_attributes(self.g, 'pos'),
             'plot_variable': 'A',
-            'color_scale': 'RdBu',
+            'color_scale': 'Reds',
             'variable_limits': {
                 'A': [0, 0.8],
                 'lambda': [0.5, 1.5],
