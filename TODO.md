@@ -36,8 +36,9 @@
 - [ ] Implement node removal and adding
 
 ### Utility
-- [ ] Implement utility maximisation
-- [ ] Implement cost function(s)
+- [x] Implement utility maximisation
+- [x] Implement cost function
+- [ ] Node addition priority or only allow a node to be added by 1 other node during an iteration
 
 ### Network updating
 <!-- - [ ] Order update dictionary -> First utility then network? -->
@@ -86,9 +87,11 @@
 - [x] Deal with different dimensions when writing
 - [x] Reconfiguration visualization
 - [x] More consistent network update locations
+- [x] Visualize edges with 0 utility
+- [x] Visualize utility
 - [x] Read states from disk
   - [ ] Rework for dictionary format
-- [x] Visualize utility
+- [ ] Visualize utility
 - [ ] Add regular plots / trends
 - [ ] Optimize animation if possible
 - [ ] Support jupyter notebook

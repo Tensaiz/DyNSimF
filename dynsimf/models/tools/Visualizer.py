@@ -46,15 +46,17 @@ class VisualizationConfiguration(object):
             for state in config['state_names']:
                 if state not in config['variable_limits']:
                     config['variable_limits'][state] = [-1, 1]
+            config['variable_limits']['utility'] = [0, 1]
             self.variable_limits = config['variable_limits']
 
     def validate(self):
         ConfigValidator.validate('plot_interval', self.plot_interval, int, variable_range=(0, ))
         ConfigValidator.validate('initial_positions', self.initial_positions, dict, optional=True)
         ConfigValidator.validate('plot_variable', self.plot_variable, str)
-        if self.plot_variable not in self.config['state_names']:
+        if self.plot_variable not in self.config['state_names'] and self.plot_variable != 'utility':
             raise ValueError('The plot variable ' + self.plot_variable + \
-                ' does not exist in the model\'s states: ' + str(self.config['state_names']))
+                ' does not exist in the model\'s states: ' + str(self.config['state_names']) +\
+                ' and it is not equal to utility')
         ConfigValidator.validate('color_scale', self.color_scale, str)
         ConfigValidator.validate('show_plot', self.show_plot, bool)
         ConfigValidator.validate('repeat', self.repeat, bool)
@@ -80,9 +82,12 @@ class Visualizer(object):
         self.state_map = state_map
         self.edge_values_map = edge_values_map
         self.states = model_output['states']
-        self.utilities = model_output['utility']
         self.adjacencies = model_output['adjacency']
         self.edge_values = model_output['edge_values']
+        if 'utility' in model_output:
+            self.utilities = model_output['utility']
+        else:
+            self.utilities = {}
         self.create_locations()
         self.max_iteration = self.get_total_iterations()
 
@@ -237,10 +242,10 @@ class Visualizer(object):
                 if self.config.edge_values:
                     if locations_index in self.edge_values:
                         current_edge_values = self.edge_values[locations_index][self.edge_values_map[self.config.edge_values]]
-                        edge_color = current_edge_values.flatten()[current_edge_values.flatten().nonzero()[0]]
+                        edge_color = current_edge_values.flatten()[self.adjacencies[locations_index].flatten().nonzero()[0]]
                 else:
                     if locations_index in self.utilities:
-                        edge_color = self.utilities[locations_index].flatten()[self.utilities[locations_index].flatten().nonzero()[0]]
+                        edge_color = self.utilities[locations_index].flatten()[self.adjacencies[locations_index].flatten().nonzero()[0]]
             else:
                 pos = self.static_locations
                 graph = self.graph
@@ -297,12 +302,19 @@ class Visualizer(object):
     def get_node_colors(self):
         iterations = list(self.states.keys())
         node_colors = []
-        for i in range(len(self.states.keys())):
-            if i % self.config.plot_interval == 0:
-                node_colors.append(
-                    [self.states[iterations[i]][node, self.state_map[self.config.plot_variable]]
-                    for node in self.graph.nodes]
-                )
+        if self.config.plot_variable == 'utility':
+            for i in list(self.utilities.keys()):
+                if i % self.config.plot_interval == 0:
+                    node_colors.append(
+                        (self.utilities[i] * self.adjacencies[i]).sum(axis=1)
+                    )
+        else:
+            for i in range(len(self.states.keys())):
+                if i % self.config.plot_interval == 0:
+                    node_colors.append(
+                        [self.states[iterations[i]][node, self.state_map[self.config.plot_variable]]
+                        for node in self.graph.nodes]
+                    )
         return node_colors
 
     def get_last_index(self, variable, index):
