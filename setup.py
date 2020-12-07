@@ -36,5 +36,5 @@ setup(name='dynsimf',
       long_description=long_description,
       long_description_content_type='text/markdown',
       packages=find_packages(exclude=["*.test", "*.test.*", "test.*", "test", "dynsimf.test", "dynsimf.test.*"]),
-      install_requires=['numpy', 'networkx', 'tqdm', 'pyintergraph', 'python-igraph', 'pillow', 'sphinx-rtd-theme', 'pytest', 'salib'],
+      install_requires=['numpy', 'networkx', 'tqdm', 'pyintergraph', 'python-igraph', 'pillow', 'sphinx-rtd-theme', 'pytest', 'salib', 'matplotlib'],
       )
