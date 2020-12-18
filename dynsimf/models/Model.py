@@ -122,11 +122,17 @@ class Model(object, metaclass=ABCMeta):
     def get_state(self, state):
         return self.node_states[:, self.state_map[state]]
 
+    def get_new_state(self, state):
+        return self.new_node_states[:, self.state_map[state]]
+
     def get_node_states(self, node):
         return self.node_states[node]
 
     def get_node_state(self, node, state):
         return self.node_states[node, self.state_map[state]]
+
+    def get_node_new_state(self, node, state):
+        return self.new_node_states[node, self.state_map[state]]
 
     def get_nodes_state(self, nodes, state):
         return self.node_states[nodes, self.state_map[state]]
