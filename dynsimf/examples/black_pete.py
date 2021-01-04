@@ -9,6 +9,8 @@ from dynsimf.models.components.Update import UpdateConfiguration
 
 
 if __name__ == "__main__":
+    np.random.seed(1)
+
     n = 400
     clusters = 10
     p_within = .2
@@ -26,106 +28,112 @@ if __name__ == "__main__":
     model = Model(g, ModelConfiguration(cfg))
 
     constants = {
-        'dt': 0.01,
-        'A_min': -0.5,
-        'A_star': 1,
-        's_O': 0.01,
-        's_I': 0.0005,
-        'd_A': 0.01,
-        'p': 2,
+        'N': n,
+        'sd_noise_information': .005,
+        'persuasion': 2,
         'r_min': 0.1,
-        'sd_noise_information': 0.005,
-        't_O': np.inf,
-        'N': n
+        's_O': .01,
+        'maxwell_convention': False,
+        'attention_star': 1,
+        'min_attention': -.5, # to include continuous change in O as function of K
+        'delta_attention': 0.1,
+        'decay_attention': 0.1/(1*(n^2)),
+        'deffuant_c': np.inf
     }
 
-    def initial_I(constants):
-        init_I = np.array([0.1] * constants['N'])
-        return init_I
+    def stoch_cusp(N,x,b,a,s_O,maxwell_convention=False):
+        dt=.01
+        x = x-dt*(x**3-b*x-a)+np.random.normal(0,s_O,N)
+        np.nan_to_num(x)
+        return x
 
-    def initial_O(constants):
-        init_O = np.random.normal(0, 0.01, constants['N'])
-        return init_O
+    def information_update(i1,i2,a1,a2,persuasion,r_min,info_update=True):
+        r=r_min+(1-r_min)/(1+np.exp(-1*persuasion*(a1-a2))) # resistance
+        inf=r*i1+(1-r)*i2  # compute weighted man of information
+        if not info_update:
+            inf = i1
+        return inf
+
+    init_I = np.random.normal(.1, 0, constants['N'])
+    init_O = np.random.normal(0, 0.01, constants['N'])
+    for _ in range(500):
+        init_O = stoch_cusp(constants['N'], init_O, np.zeros(constants['N'])+constants['min_attention'], init_I, constants['s_O'], False)
 
     initial_state = {
-        'I': initial_I,
-        'O': initial_O,
-        'A': 0.000001
+        'I': init_I,
+        'O': init_O,
+        'A': 0
     }
 
-    def update_I_A(nodes, constants):
-        node = nodes[0]
-        nb = np.random.choice(model.get_neighbors(node))
-        if abs(model.get_node_new_state(node, 'O') - model.get_node_new_state(nb, 'O')) > constants['t_O']:
-            return {'I': model.get_node_new_state(node, 'I')}
+    def update(constants):
+        information = model.get_state('I')
+        attention = model.get_state('A')
+        opinion = model.get_state('O')
+
+        if max(attention) == 0:
+            agent = 0
         else:
-            # Update information
-            r = constants['r_min'] + (1 - constants['r_min']) / (1 + np.exp(-1 * constants['p'] * (model.get_node_new_state(node, 'O') - model.get_node_new_state(nb, 'O'))))
-            inf = r * model.get_node_new_state(node, 'I') + (1-r) * model.get_node_new_state(nb, 'I') + np.random.normal(0, constants['s_I'])
+            factor = 1.0/sum(attention)
+            probs = []
+            for a in attention:
+                probs.append(a * factor)
+            agent = np.random.choice(list(range(constants['N'])), 1, replace=False, p=probs)
 
-            # Update attention
-            node_A = model.get_node_new_state(node, 'A') + constants['d_A'] * (2 * constants['A_star'] - model.get_node_new_state(node, 'A'))
-            nb_A = model.get_node_new_state(nb, 'A') + constants['d_A'] * (2 * constants['A_star'] - model.get_node_new_state(nb, 'A'))
-            return {'I': [inf], 'A': {node: node_A, nb: nb_A}}
+        if agent != 0:
+            partner = np.random.choice(model.get_neighbors(agent[0]))
+        else:
+            partner = 0
 
-    def update_I(constants):
-        return {'I': model.get_new_state('I') + np.random.normal(0, constants['sd_noise_information'], constants['N'])}
+        if partner != 0 and agent != 0:
+            I1 = information[agent]; A1 = attention[agent]; O1 = opinion[agent]
+            I2 = information[partner]; A2 = attention[partner]; O2 = opinion[partner]
 
-    def update_A(constants):
-        return {'A': model.get_new_state('A') - 2 * constants['d_A'] * model.get_new_state('A')/constants['N']}
+        if partner != 0 and agent != 0:
+            if abs(O1 - O2) < constants['deffuant_c']:
+                information[agent] = information_update(I1,I2,A1,A2,constants['persuasion'],constants['r_min'],True)
+                information[partner] = information_update(I2,I1,A2,A1,constants['persuasion'],constants['r_min'],True)
 
-    def update_O(constants):
-        noise = np.random.normal(0, constants['s_O'], constants['N'])
-        x = model.get_new_state('O') - constants['dt'] * (model.get_new_state('O')**3 - (model.get_new_state('A') + constants['A_min']) * model.get_new_state('O') - model.get_new_state('I')) + noise
-        return {'O': x}
+            if abs(O1 - O2) < constants['deffuant_c']:
+                attention[agent]=attention[agent]+constants['delta_attention']*(2*constants['attention_star']-attention[agent])
+                attention[partner]=attention[partner]+constants['delta_attention']*(2*constants['attention_star']-attention[partner])
 
-    def activism_A():
-        A = model.get_new_state('A')
-        A[np.arange(1, constants['N'], constants['N']/3)[1:].astype(int)-1] = 1
-        return {'A': A}
+        information = information+np.random.normal(0,constants['sd_noise_information'],constants['N'])
+        attention = attention-2*constants['delta_attention']*attention/constants['N']   # correction 2 times if interaction
+        opinion = stoch_cusp(constants['N'],opinion,attention+constants['min_attention'],information,constants['s_O'], constants['maxwell_convention'])
 
-    def activism_I():
-        I = model.get_new_state('I')
-        I[np.arange(1, constants['N'], constants['N']/3)[1:].astype(int)-1] = -0.5
-        return {'I': I}
+        return {'O': opinion, 'I': information, 'A': attention}
 
-    def activism_O():
-        O = model.get_new_state('O')
-        O[np.arange(1, constants['N'], constants['N']/3)[1:].astype(int)-1] = -0.5
-        return {'O': O}
+    def activism():
+        information = model.get_state('I')
+        attention = model.get_state('A')
+        opinion = model.get_state('O')
 
-    def sample_attention_weighted(graph):
-        probs = []
-        A = model.get_new_state('A')
-        factor = 1.0/sum(A)
-        for a in A:
-            probs.append(a * factor)
-        return np.random.choice(graph.nodes, size=1, replace=False, p=probs)
+        m = np.zeros(constants['N'])
+        m[np.arange(1, constants['N'], constants['N']/3)[1:].astype(int)-1] = 1
+
+        information_activists=-.5
+        attention_activists=1
+        opinion_activists=-.5
+
+        information[m == 1] = information_activists
+        attention[m == 1] = attention_activists
+        opinion[m == 1] = opinion_activists
+
+        return {'O': opinion, 'I': information, 'A': attention}
 
     # Model definition
     model.constants = constants
     model.set_states(['I', 'A', 'O'])
 
-    update_cfg = UpdateConfiguration({
-        'arguments': {'constants': model.constants},
-        'get_nodes': True
-    })
-    up_I_A = Update(update_I_A, update_cfg)
+    model.add_update(update, {'constants': model.constants})
 
-    model.add_update(update_I, {'constants': model.constants})
-    model.add_update(update_A, {'constants': model.constants})
-    model.add_update(update_O, {'constants': model.constants})
-    model.add_scheme(Scheme(sample_attention_weighted, {'args': {'graph': model.graph}, 'updates': [up_I_A]}))
+    activism_update = Update(activism)
+    model.add_scheme(Scheme(lambda graph: graph.nodes, {'args': {'graph': model.graph}, 'lower_bound': 300, 'upper_bound': 301, 'updates': [activism_update]}))
 
-    a_I = Update(activism_I)
-    a_A = Update(activism_A)
-    a_O = Update(activism_O)
-
-    model.add_scheme(Scheme(lambda graph: graph.nodes, {'args': {'graph': model.graph}, 'lower_bound': 300, 'upper_bound': 301, 'updates': [a_I, a_A, a_O]}))
 
     model.set_initial_state(initial_state, {'constants': model.constants})
 
-    output = model.simulate(25000)
+    output = model.simulate(15000)
 
     visualization_config = {
         'layout': nx.drawing.layout.spring_layout,

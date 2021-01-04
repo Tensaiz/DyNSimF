@@ -431,10 +431,14 @@ class Model(object, metaclass=ABCMeta):
         self.graph_changed = True
 
     def handle_adjacency_node_add(self, origin, neighbors):
+        """
+        Set new node adjacency and if applicable assign given edge values
+        """
         neighbor_indices = self.neighbor_update_to_var('indices', neighbors)
         self.new_adjacency[origin, neighbor_indices] = 1
         self.new_adjacency[neighbor_indices, origin] = 1
-        self.set_node_neighbor_values(origin, neighbors)
+        if len(neighbors) > 0 and isinstance(neighbors[0], tuple):
+            self.set_node_neighbor_values(origin, neighbors)
         self.graph_changed = True
 
     def set_node_neighbor_values(self, origin, neighbors):
