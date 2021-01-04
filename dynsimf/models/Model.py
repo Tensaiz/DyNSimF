@@ -122,11 +122,17 @@ class Model(object, metaclass=ABCMeta):
     def get_state(self, state):
         return self.node_states[:, self.state_map[state]]
 
+    def get_new_state(self, state):
+        return self.new_node_states[:, self.state_map[state]]
+
     def get_node_states(self, node):
         return self.node_states[node]
 
     def get_node_state(self, node, state):
         return self.node_states[node, self.state_map[state]]
+
+    def get_node_new_state(self, node, state):
+        return self.new_node_states[node, self.state_map[state]]
 
     def get_nodes_state(self, nodes, state):
         return self.node_states[nodes, self.state_map[state]]
@@ -425,10 +431,14 @@ class Model(object, metaclass=ABCMeta):
         self.graph_changed = True
 
     def handle_adjacency_node_add(self, origin, neighbors):
+        """
+        Set new node adjacency and if applicable assign given edge values
+        """
         neighbor_indices = self.neighbor_update_to_var('indices', neighbors)
         self.new_adjacency[origin, neighbor_indices] = 1
         self.new_adjacency[neighbor_indices, origin] = 1
-        self.set_node_neighbor_values(origin, neighbors)
+        if len(neighbors) > 0 and isinstance(neighbors[0], tuple):
+            self.set_node_neighbor_values(origin, neighbors)
         self.graph_changed = True
 
     def set_node_neighbor_values(self, origin, neighbors):
