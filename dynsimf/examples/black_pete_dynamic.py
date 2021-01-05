@@ -191,7 +191,7 @@ if __name__ == "__main__":
 
     visualization_config = {
         'layout': nx.drawing.layout.spring_layout,
-        'plot_interval': 100,
+        'plot_interval': 10,
         'plot_variable': 'O',
         'variable_limits': {
             'A': [0, 1],
@@ -201,7 +201,7 @@ if __name__ == "__main__":
         'cmin': -1,
         'cmax': 1,
         'color_scale': 'RdBu',
-        'show_plot': True,
+        'show_plot': False,
         'plot_output': '../animations/HIOM_dynamic.gif',
         'plot_title': 'HIERARCHICAL ISING OPINION MODEL',
     }
