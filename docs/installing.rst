@@ -17,6 +17,21 @@ The DyNSimF package lives in the Python Package Index at pypi_. It can be instal
 
 This will download and install the necessary requirements and the DyNSimF framework. If you are on Linux, you might have to include ``sudo`` at the beginning of the command.
 
+
+==================
+Conda installation
+==================
+
+To install the package using conda, pip is still necessary as it hosts the package. Run the commands below to create a conda environment for the package.
+
+.. code-block:: python
+
+    conda create -n dynsimf
+    conda activate dynsimf
+    conda install pip
+    pip install dynsimf
+
+
 ===================
 Source installation
 ===================
@@ -25,7 +40,7 @@ First download the compressed source (e.g: .zip) from pypi_ or GitHub_. Unpack t
 
 .. code-block:: python
 
-    python setup.py install to build and install
+    python setup.py install
 
 ============
 Using GitHub
