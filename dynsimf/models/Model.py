@@ -333,7 +333,10 @@ class Model(object, metaclass=ABCMeta):
 
     def update_state(self, nodes, updatables):
         for state, update_output in updatables.items():
-            if isinstance(update_output, list) or isinstance(update_output, np.ndarray):
+            if isinstance(update_output, list) or \
+               isinstance(update_output, np.ndarray) or \
+               isinstance(update_output, int) or \
+               isinstance(update_output, float):
                 self.new_node_states[nodes, self.state_map[state]] = update_output
             elif isinstance(update_output, dict):
                 # Add a 2d array implementation instead of for loop
