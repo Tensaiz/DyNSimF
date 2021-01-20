@@ -5,7 +5,6 @@ from dynsimf.models.Model import Model
 from dynsimf.models.Model import ModelConfiguration
 from dynsimf.models.components.Scheme import Scheme
 from dynsimf.models.components.Update import Update
-from dynsimf.models.components.Update import UpdateConfiguration
 
 
 if __name__ == "__main__":
@@ -71,7 +70,7 @@ if __name__ == "__main__":
         opinion = model.get_state('O')
 
         if max(attention) == 0:
-            agent = 0
+            agent = -1
         else:
             factor = 1.0/sum(attention)
             probs = []
@@ -79,16 +78,16 @@ if __name__ == "__main__":
                 probs.append(a * factor)
             agent = np.random.choice(list(range(constants['N'])), 1, replace=False, p=probs)
 
-        if agent != 0:
+        if agent != -1:
             partner = np.random.choice(model.get_neighbors(agent[0]))
         else:
-            partner = 0
+            partner = -1
 
-        if partner != 0 and agent != 0:
+        if partner != -1 and agent != -1:
             I1 = information[agent]; A1 = attention[agent]; O1 = opinion[agent]
             I2 = information[partner]; A2 = attention[partner]; O2 = opinion[partner]
 
-        if partner != 0 and agent != 0:
+        if partner != -1 and agent != -1:
             if abs(O1 - O2) < constants['deffuant_c']:
                 information[agent] = information_update(I1,I2,A1,A2,constants['persuasion'],constants['r_min'],True)
                 information[partner] = information_update(I2,I1,A2,A1,constants['persuasion'],constants['r_min'],True)
@@ -140,7 +139,7 @@ if __name__ == "__main__":
         'plot_interval': 500,
         'plot_variable': 'O',
         'variable_limits': {
-            'A': [0, 1],
+            'A': [0, 1.5],
             'O': [-1, 1],
             'I': [-1, 1]
         },

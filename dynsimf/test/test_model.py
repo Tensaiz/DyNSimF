@@ -73,3 +73,26 @@ class ModelTest(unittest.TestCase):
         output = m.simulate(1)
         self.assertEqual(list(output['states'][0]), list(np.zeros((10,1))))
         self.assertEqual(list(output['states'][1]), list(np.arange(10)))
+
+
+    def test_assign_nodes(self):
+        # Network definition
+        g = nx.random_geometric_graph(10, 0.1)
+        m = Model(g)
+
+        initial_state = {
+            'x': 0,
+        }
+
+        def update_x():
+            return {'x': {0: 5, 5: 10}}
+
+        # Model definition
+        m.set_states(['x'])
+        m.add_update(update_x)
+        m.set_initial_state(initial_state)
+
+        output = m.simulate(1)
+        # self.assertEqual(list(output['states'][0]), list(np.zeros((10,1))))
+        # self.assertEqual(list(output['states'][1]), list(np.arange(10)))
+        print(output)

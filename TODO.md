@@ -19,6 +19,7 @@
   - [x] Adjacency memory
 - [ ] Add non-array support
 - [ ] Multi process update functions per iteration
+- [ ] Execute update every X iterations
 
 ## Dynamic network utility layer
 
@@ -91,7 +92,7 @@
 - [x] Visualize utility
 - [x] Read states from disk
   - [ ] Rework for dictionary format
-- [ ] Visualize utility
+- [x] Visualize utility
 - [ ] Add regular plots / trends
 - [ ] Optimize animation if possible
 - [ ] Support jupyter notebook

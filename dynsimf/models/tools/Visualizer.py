@@ -28,6 +28,7 @@ class VisualizationConfiguration(object):
         self.config = config
         self.plot_interval = config['plot_interval'] if 'plot_interval' in config else 1
         self.initial_positions = config['initial_positions'] if 'initial_positions' in config else None
+        self.fixed_positions = config['fixed_positions'] if 'fixed_positions' in config else None
         self.plot_variable = config['plot_variable'] if 'plot_variable' in config else None
         self.color_scale = config['color_scale'] if 'color_scale' in config else 'Reds'
         self.show_plot = config['show_plot'] if 'show_plot' in config else True
@@ -39,6 +40,7 @@ class VisualizationConfiguration(object):
         self.layout_params = config['layout_params'] if 'layout_params' in config else None
         self.edge_alpha = config['edge_alpha'] if 'edge_alpha' in config else 0.2
         self.edge_values = config['edge_values'] if 'edge_values' in config else None
+        self.directed = config['directed'] if 'directed' in config else True
 
         if 'variable_limits' not in config:
             self.variable_limits = {state: [-1, 1] for state in config['state_names']}
@@ -52,6 +54,7 @@ class VisualizationConfiguration(object):
     def validate(self):
         ConfigValidator.validate('plot_interval', self.plot_interval, int, variable_range=(0, ))
         ConfigValidator.validate('initial_positions', self.initial_positions, dict, optional=True)
+        ConfigValidator.validate('fixed_positions', self.fixed_positions, dict)
         ConfigValidator.validate('plot_variable', self.plot_variable, str)
         if self.plot_variable not in self.config['state_names'] and self.plot_variable != 'utility':
             raise ValueError('The plot variable ' + self.plot_variable + \
@@ -70,6 +73,7 @@ class VisualizationConfiguration(object):
         ConfigValidator.validate('layout_params', self.layout_params, dict, optional=True)
         ConfigValidator.validate('edge_alpha', self.edge_alpha, float, variable_range=(0, 1))
         ConfigValidator.validate('edge_values', self.edge_values, str, optional=True)
+        ConfigValidator.validate('directed', self.directed, bool)
 
 class Visualizer(object):
     """
@@ -117,7 +121,10 @@ class Visualizer(object):
         # If it is the first iteration and initial positions have been given, use them
         if iteration == list(self.adjacencies.keys())[0] and self.config.initial_positions:
             self.locations[iteration] = self.config.initial_positions
-            self.graphs[iteration] = nx.convert_matrix.from_numpy_array(adjacency_matrix, create_using=nx.DiGraph)
+            if self.config.directed:
+                self.graphs[iteration] = nx.convert_matrix.from_numpy_array(adjacency_matrix, create_using=nx.DiGraph)
+            else:
+                self.graphs[iteration] = nx.convert_matrix.from_numpy_array(adjacency_matrix)
         else:
             # Otherwise use the previous graph's calculated positions as initial positions if there are
             initial_positions = self.get_initial_positions(last_index)
@@ -134,8 +141,14 @@ class Visualizer(object):
 
     def create_adjacency_node_locations(self, adjacency_matrix, initial_positions):
         # Adjacency matrix to graph
-        graph = nx.convert_matrix.from_numpy_array(adjacency_matrix, create_using=nx.DiGraph)
-        positions = self.create_layout(graph, initial_positions)
+        if self.config.directed:
+            graph = nx.convert_matrix.from_numpy_array(adjacency_matrix, create_using=nx.DiGraph)
+        else:
+            graph = nx.convert_matrix.from_numpy_array(adjacency_matrix)
+        if self.config.fixed_positions:
+            positions = self.config.fixed_positions
+        else:
+            positions = self.create_layout(graph, initial_positions)
         return (graph, positions)
 
     def create_layout(self, graph, initial_positions=None):
@@ -251,7 +264,7 @@ class Visualizer(object):
                 graph = self.graph
 
             nx.draw_networkx_edges(graph, pos,
-                                   alpha=self.config.edge_alpha, ax=network, connectionstyle='arc3, rad=0.1', edge_color=edge_color, edge_cmap=cm, vmin=0, vmax=1)
+                                   alpha=self.config.edge_alpha, ax=network, connectionstyle='arc3, rad=0.1', edge_color=edge_color, edge_cmap=cm, edge_vmin=0, edge_vmax=1)
 
             nc = nx.draw_networkx_nodes(graph, pos,
                                         nodelist=graph.nodes,

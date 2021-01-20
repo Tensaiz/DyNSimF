@@ -1,5 +1,5 @@
 numpy
-networkx
+networkx>=2.5
 tqdm
 pyintergraph
 python-igraph
