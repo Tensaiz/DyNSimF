@@ -1,31 +1,14 @@
-************
-HIOM example
-************
+import networkx as nx
+import numpy as np
 
------------
-Description
------------
+from dynsimf.models.Model import Model
+from dynsimf.models.Model import ModelConfiguration
+from dynsimf.models.components.Scheme import Scheme
+from dynsimf.models.components.Update import Update
+from dynsimf.models.components.Update import UpdateConfiguration
+from dynsimf.models.Example import Example
 
-This example will be slightly more complex, 
-as it involves different schemes and update functions to model the spread of opinion polarization within and across individuals.
-
-The paper: `The polarization within and across individuals: the hierarchical Ising opinion model (Han L J van der Maas, Jonas Dalege, Lourens Waldorp) <https://academic.oup.com/comnet/article-abstract/8/2/cnaa010/5823576>`_
-
-----
-Code
-----
-
-.. code-block:: python
-
-    import networkx as nx
-    import numpy as np
-
-    from dynsimf.models.Model import Model
-    from dynsimf.models.Model import ModelConfiguration
-    from dynsimf.models.components.Scheme import Scheme
-    from dynsimf.models.components.Update import Update
-    from dynsimf.models.components.Update import UpdateConfiguration
-    from dynsimf.models.Example import Example
+if __name__ == "__main__":
 
     n = 400
 
@@ -139,13 +122,3 @@ Code
 
     model.configure_visualization(visualization_config, iterations)
     model.visualize('animation')
-
-
-------
-Output
-------
-
-.. figure:: https://i.imgur.com/emEFOlx.gif
-   :align: center
-   :alt: Verification
-

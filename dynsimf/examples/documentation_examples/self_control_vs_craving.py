@@ -1,29 +1,12 @@
-*******************************
-Self control vs craving example
-*******************************
 
------------
-Description
------------
+import networkx as nx
+import numpy as np
+import matplotlib.pyplot as plt
 
-This is an example of how a continuous model that uses multiple internal states can be modelled.
-In this case, we have modelled the `The Dynamics of Addiction: Craving versus Self-Control (Johan Grasman, Raoul P P P Grasman, Han L J van der Maas) <https://pubmed.ncbi.nlm.nih.gov/27352037/>`_.
-The model tries to model addiction by defining several interacting states; craving, self control, addiction, lambda, external influences, vulnerability, and addiction.
+from dynsimf.models.Model import Model
+from dynsimf.models.Model import ModelConfiguration
 
-It was slightly changed by using the average neighbour addiction to change the External influence variable to make it spread through the network.
-
-----
-Code
-----
-
-.. code-block:: python
-
-    import networkx as nx
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    from dynsimf.models.Model import Model
-    from dynsimf.models.Model import ModelConfiguration
+if __name__ == "__main__":
 
     # Network definition
     g = nx.random_geometric_graph(250, 0.125)
@@ -143,22 +126,3 @@ Code
 
     model.configure_visualization(visualization_config, its)
     model.visualize('animation')
-
-
-------
-Output
-------
-
-After simulating the model, we get two outputs, the first figure was created to compare it with a figure that is shown in the paper as verification.
-
-The last figure is an animation that is outputted when the visualize function is called. It may slightly differ depending on the color scheme or parameters used.
-
-.. figure:: https://i.imgur.com/HfoWlnr.png
-   :align: center
-   :alt: Verification
-
-.. figure:: https://i.imgur.com/EeucXQt.gif
-   :align: center
-   :alt: Animation
-
-

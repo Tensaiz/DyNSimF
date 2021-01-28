@@ -54,7 +54,7 @@ class VisualizationConfiguration(object):
     def validate(self):
         ConfigValidator.validate('plot_interval', self.plot_interval, int, variable_range=(0, ))
         ConfigValidator.validate('initial_positions', self.initial_positions, dict, optional=True)
-        ConfigValidator.validate('fixed_positions', self.fixed_positions, dict)
+        ConfigValidator.validate('fixed_positions', self.fixed_positions, dict, optional=True)
         ConfigValidator.validate('plot_variable', self.plot_variable, str)
         if self.plot_variable not in self.config['state_names'] and self.plot_variable != 'utility':
             raise ValueError('The plot variable ' + self.plot_variable + \

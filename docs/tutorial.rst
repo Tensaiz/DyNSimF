@@ -194,86 +194,94 @@ This allows to only update a select amount of nodes during a specific time in th
 Under the hood, when schemes are not defined,
 a default scheme is used for every rule that is active during each iteration and selects all nodes.
 
-To create a scheme, simply define a list where each element is a dictionary containing the following keys:
+To create a scheme, simply create a scheme object that takes
 
-	- name: maps to a string that indicates the name of the scheme
-	- function: maps to a function that returns the nodes that should be updated if a condition is true. Its arguments are:
+	- A sample function: a function that returns the nodes that should be updated. ary with State -> Value mappings
 
-		- graph: the full networkx graph
-		- status: A status dictionary that maps a node to a dictionary with State -> Value mappings
+    - A dictionary with as keys:
 
-	- lower (optional): maps to an integer indicating from which iteration the scheme should apply
-	- upper (optional): maps to an integer indicating until which iteration the scheme should apply
+        - 'args': maps to a dictionary with arguments for the sample function
 
-After the scheme dictionary is created, it can be added to the model when the model is initalized:
-``ContinuousModel(graph, constants=constants, iteration_schemes=schemes)``.
+        - 'lower_bound' (optional): maps to an integer indicating from which iteration the scheme should apply
 
-Furthermore, if rules are added using the ``add_rule`` function, it should now be done as follows:
-``model.add_rule('state_name', update_function, condition, scheme_list)``.
-Here a rule can be added to multiple schemes. The scheme_list is a list, where every element should match a name of a scheme,
-which means that updates can be done in multiple schemes.
-If a scheme_list is not provided, the rule will be executed for every iteration, for every node, if the condition is true.
+        - 'upper_bound' (optional): maps to an integer indicating until which iteration the scheme should apply
 
-In the example below, the previous model is executed in the same manner,
-but this time, the update_1 function is only being evaluated when ``lower ≤ iteration < upper``,
-in this case when the iterations are equal or bigger than 100 but lower than 200.
-Furthermore, if the condition is true, the update function is then only executed for the nodes returned by the function specified in the scheme.
+        - 'updates': maps to a list of update objects that should be executed during this scheme
+
+After the scheme object is created, it can be added to the model by using the `add_scheme function`:
+``model.add_scheme(Scheme(sample_function, {'args': {'argument': argument_value}, 'updates': [update_object]}))``.
+
+In the example below, the update_1 function is only being evaluated when ``lower ≤ iteration < upper``,
+in this case only when the second iteration is occurring.
 In this case a node is selected based on the weighted `status_1` value.
 Because no scheme has been added to the second rule, it will be evaluated and executed for every node, each iteration.
+
+The output of the model will provide 0.6 as value for `status_2`, as 0.1 is added each iteration to the initial value of 0.1.
+Furthermore, at iteration 2, one node is sampled by the sample function, for which status_2 is taken and then increased by 0.1. This value is then updated for its status_1 value.
+This means that for the end result only one node will have a 0.4 value for status_1, while the other nodes will have their initial value of 0.1 after 5 iterations.
 
 
 .. code-block:: python
 
     import networkx as nx
     import numpy as np
-    from ndlib.models.ContinuousModel import ContinuousModel
-    import ndlib.models.ModelConfig as mc
 
-    g = nx.erdos_renyi_graph(n=1000, p=0.1)
+    from dynsimf.models.Model import Model
+    from dynsimf.models.Model import ModelConfiguration
+    from dynsimf.models.components.Update import Update
+    from dynsimf.models.components.Update import UpdateType
+    from dynsimf.models.components.Update import UpdateConfiguration
+    from dynsimf.models.components.Scheme import Scheme
+
+    g = nx.erdos_renyi_graph(n=10, p=0.1)
+    model = Model(g, ModelConfiguration())
 
     # Define schemes
-    def sample_state_weighted(graph, status):
+    def sample_state_weighted(graph):
         probs = []
-        status_1 = [stat['status_1'] for stat in list(status.values())]
+        status_1 = model.get_state('status_1')
         factor = 1.0/sum(status_1)
         for s in status_1:
             probs.append(s * factor)
         return np.random.choice(graph.nodes, size=1, replace=False, p=probs)
 
-    schemes = [
-        {
-            'name': 'random weighted agent',
-            'function': sample_state_weighted,
-            'lower': 100,
-            'upper': 200
-        }
-    ]
+    initial_state = {
+        'status_1': 0.1,
+        'status_2': 0.1,
+    }
 
-    model = ContinuousModel(g, iteration_schemes=schemes)
-
-    model.add_status('status_1')
-    model.add_status('status_2')
-
-    # Compartments
-    condition = NodeStochastic(1)
+    model.set_states(['status_1', 'status_2'])
 
     # Update functions
-    def update_1(node, graph, status, attributes, constants):
-        return status[node]['status_2'] + 0.1
+    def update_1(nodes):
+        node = nodes[0]
+        node_update = model.get_state('status_2')[node] + 0.1
+        return {'status_1': {node: node_update}}
 
-    def update_2(node, graph, status, attributes, constants):
-        return status[node]['status_1'] + 0.5
+    def update_2():
+        s2 = model.get_state('status_2') + 0.1
+        return {'status_2': s2}
 
-    # Rules
-    model.add_rule('status_1', update_1, condition, ['random weighted agent'])
-    model.add_rule('status_2', update_2, condition)
+    # Add update 2 to the model, which will increase status_1 by 0.5 each iteration
+    model.add_update(update_2)
 
+    update_cfg = UpdateConfiguration({
+        'arguments': {}, # No other arguments
+        'get_nodes': True, # We want the nodes as argument
+        'update_type': UpdateType.STATE
+    })
+    u = Update(update_1, update_cfg) # Create an Update object that contains the object function
+    # Create a scheme with the correct sample function, parameters, bounds, and update function
+    model.add_scheme(Scheme(sample_state_weighted, {'args': {'graph': model.graph}, 'lower_bound': 2, 'upper_bound': 3, 'updates': [u]}))
+
+    model.set_initial_state(initial_state)
+    output = model.simulate(5)
 
 ----------
 Simulation
 ----------
 
-After everything has been specified and added to the model, it can be ran using the ``iteration_bunch(iterations)`` function.
+After everything has been specified and added to the model, it can be ran using the ``simulate(iterations)`` function.
 It will run the model iterations amount of times and return the regular output as shown in other models before.
 
 .. ------------------------
@@ -288,7 +296,7 @@ It will run the model iterations amount of times and return the regular output a
 ..    optional/ModelRunner.rst
 ..    optional/Visualization.rst
 
-.. The ``ContinuousModelRunner`` can be used to simulate a model mutliple times using different parameters. 
+.. The ``ContinuousModelRunner`` can be used to simulate a model mutliple times using different parameters.
 .. It also includes sensitivity analysis functionalities.
 
 .. The visualization section explains how visualizations can be configured, shown, and saved.
