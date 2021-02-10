@@ -154,6 +154,12 @@ class Model(object, metaclass=ABCMeta):
         available_iterations = list(self.simulation_output['adjacency'].keys())
         return self.simulation_output['adjacency'][available_iterations[-n - 1]]
 
+    def get_edge_values(self, edge_values_name):
+        return self.edge_values[self.edge_values_map[edge_values_name]]
+
+    def get_all_edge_values(self):
+        return self.edge_values
+
     def add_update(self, fun, args=None, condition=None, get_nodes=False, update_type=None):
         arguments = args if args else {}
         if condition:
