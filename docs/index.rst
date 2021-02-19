@@ -41,6 +41,7 @@ Development Team
    overview.rst
    installing.rst
    tutorial.rst
+   modules.rst
 
 
 .. _`Mathijs Maijer`: https://mathijsmaijer.nl/

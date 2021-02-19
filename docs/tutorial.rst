@@ -129,8 +129,6 @@ The third state is constant and thus the same for every node.
 Updates
 -------
 
-In progress...
-
 -----------------
 Update conditions
 -----------------

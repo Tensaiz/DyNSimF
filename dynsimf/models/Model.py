@@ -395,11 +395,12 @@ class Model(object, metaclass=ABCMeta):
 
     def handle_node_initialization(self, index, node):
         """
+        Initialize a node by setting the edge values of the neighbors and setting the node states
+
         :param index int: The index of the node in the graph
         :param node dict: a node dictionary of the form:
             key (str): 'neighbors', value (list[tuple]): (neighbor_index, edge_values_name values_in, values_out)
             key (str): 'states', value (dict): { 'state_name' (str) : state_value (number) }
-        Initialize a node by setting the edge values of the neighbors and setting the node states
         """
         self.set_node_neighbor_values(index, node['neighbors'])
         self.set_new_node_states(index, node['states'])
