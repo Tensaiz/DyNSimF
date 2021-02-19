@@ -1,5 +1,5 @@
-dynsimf
-=======
+Documentation
+=============
 
 .. toctree::
    :maxdepth: 4
