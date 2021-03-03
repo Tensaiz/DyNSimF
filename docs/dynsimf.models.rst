@@ -14,14 +14,6 @@ Subpackages
 Submodules
 ----------
 
-dynsimf.models.ArrayModel module
---------------------------------
-
-.. automodule:: dynsimf.models.ArrayModel
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 dynsimf.models.Example module
 -----------------------------
 

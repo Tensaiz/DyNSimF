@@ -165,7 +165,7 @@ As can be seen in the example, the states can be retrieved using the function ``
 
     model.add_states(['state_1', 'state_2']
 
-    # Conditions
+    # Creating the condition
     s = StochasticCondition(ConditionType.STATE, 1)
 
     # Update functions
@@ -178,6 +178,10 @@ As can be seen in the example, the states can be retrieved using the function ``
     # Rules
     model.add_update(update_1, condition=s)
     model.add_update(update_2, condition=s)
+
+Note that conditions can be chained together as well. As could be seen above, when the condition was initialized, the type was provided: ``StochasticCondition(ConditionType.STATE, 1)``. 
+But every condition can also take a `chained_condition` parameter, that takes in another condition object. All nodes that pass the current condition, will then be passed to the next condition in the chain. 
+The chained condition can also have another condition chained to it, allowing any set of conditions. The documentation on the conditions can be read to see which parameters can be used for which condition.
 
 -----------------
 Iteration schemes
@@ -275,6 +279,79 @@ This means that for the end result only one node will have a 0.4 value for statu
     model.set_initial_state(initial_state)
     output = model.simulate(5)
 
+------------------
+Utility Cost model
+------------------
+
+This section will describe the extra utility cost layer that can be added to a model. More about this concept can be read in the paper `A Structural Model of Segregation in Social Networks` by Angelo Mele.
+Basically, by utilizing 3 functions of the package, the whole network will reconfigure itself in a way to maximise the utility for each node, while not exceeding a set cost threshold.
+Every node link has a calculated utility and a calculated cost, which are both defined by the user. 
+The package will automatically try to configure the network in such a way to maximise the utility for each node, while staying below a set cost threshold.
+
+The first step is to initialize the model:
+
+.. code-block:: python
+
+    from dynsimf.models.UtilityCostModel import FunctionType
+    from dynsimf.models.UtilityCostModel import SampleMethod
+    from dynsimf.models.UtilityCostModel import UtilityCostModel
+    from dynsimf.models.Model import ModelConfiguration
+    from dynsimf.models.components.Memory import MemoryConfiguration
+    from dynsimf.models.components.Memory import MemoryConfigurationType
+
+    cfg = {
+        'adjacency_memory_config': \
+            MemoryConfiguration(MemoryConfigurationType.ADJACENCY, {
+                'memory_size': 0
+            }),
+        'utility_memory_config': \
+            MemoryConfiguration(MemoryConfigurationType.UTILITY, {
+                'memory_size': 0
+            })
+    }
+    cost_threshold = 1
+    model = UtilityCostModel(g, cost_threshold, ModelConfiguration(cfg))
+
+A few things are happening here. First an actual configuration dictionary is used for the `ModelConfiguration` class. 
+This allows the storage of the utility and adjacency values each iteration. A value of `0` means that it should be stored for every round. 
+`-1` would mean that the values should not be stored.
+Any value above 0 indicates the amount of consecutive iterations the values should be stored for, which might be helpful if you need the values of the previous N iterations.
+
+Then, when the model is initialized, the ``UtilityCostModel`` class is used instead of the regular ``Model`` class. 
+It also takes a `cost_threshold` argument, that indicates the max sum of the costs a node can have. After the initialization of the model, three functions must be set by the user.
+
+.. code-block:: python
+
+    def utility_calculation():
+        return np.random.random((n_nodes, n_nodes))
+
+    def cost_calculation():
+        adjacency = model.get_adjacency()
+        cost = np.ones((n_nodes, n_nodes)) * 0.1
+        return cost
+
+    model.add_utility_function(utility_calculation, FunctionType.MATRIX)
+    model.add_cost_function(cost_calculation, FunctionType.MATRIX)
+    model.set_sampling_function(SampleMethod.NEIGHBORS_OF_NEIGHBORS)
+
+Several things are happening here. First the utility and cost functions are defined. 
+There are two possibilities when defining these functions, either they return a matrix, or a single value but take in 2 nodes as arguments.
+If a matrix is returned, it should have the dimensions of the amount of nodes x the amount of nodes. 
+When providing the defined functions, the second argument defines which type it is, pairwise or matrix, which is done by using the ``FunctionType`` enumeration.
+The ``add_utility_function`` and ``add_cost_function`` do just that, they add the user defined functions to the model.
+
+The final step is to select a sampling function, that defines which nodes may connect with each other. 
+
+.. code-block:: python
+
+    class SampleMethod(Enum):
+        ALL = 0
+        NEIGHBORS_OF_NEIGHBORS = 1
+        CUSTOM = 2
+
+By using ``SampleMethod.ALL``, every node can potentially connect to another node, while the `NEIGHBORS_OF_NEIGHBORS` option only allows nodes to connect to their neighbors of neighbors.
+If a custom sample method is used, it should return a matrix, where each row and column represent a node. Every `1` in a column represents that the node in that row can form a connection with that node in the column.
+
 ----------
 Simulation
 ----------
@@ -298,6 +375,28 @@ It will run the model iterations amount of times and return the regular output a
 .. It also includes sensitivity analysis functionalities.
 
 .. The visualization section explains how visualizations can be configured, shown, and saved.
+
+----------------
+Helper functions
+----------------
+
+There are several functions that can be used during the simulation in the update functions that can be of help.
+
+	- ``get_state(state_name)`` Gets all the values of a state.
+
+    - ``get_previous_nodes_states(n)`` Get all the nodes' states from the n'th previous saved iteration
+
+    - ``get_adjacency()`` Gets the adjacency matrix
+
+    - ``get_neighbors(node)`` Get all neighbors of a ndoe
+
+    - ``get_neighbors_neighbors_adjacency_matrix()`` Get the adjacency matrix, where a 1 represents a neighbor of a neighbor.
+
+    - ``get_neighbors_neighbors(node)`` Get the neighbors of all neighbors of a node.
+
+    - ``get_utility()`` Get the current node utility.
+
+    - ``get_previous_nodes_utility(iteration)`` Get previous node utility where iteration is the n'th previous iteration.
 
 --------
 Examples

@@ -6,6 +6,7 @@ from dynsimf.models.components.conditions.Condition import ConditionType
 __author__ = "Mathijs Maijer"
 __email__ = "m.f.maijer@gmail.com"
 
+
 class CustomCondition(Condition):
     '''
     Base class that can be used to create custom conditions that do not fit under stochastic or threshold conditions

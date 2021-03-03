@@ -16,15 +16,54 @@ __email__ = "m.f.maijer@gmail.com"
 
 
 class VisualizationConfiguration(object):
-    """
+    '''
     Configuration for the visualizer
-    """
+
+    :var int plot_interval: An integer indicating the interval between iterations to store a new plot, defaults to 1
+    :var dict initial_positions: A dictionary with 
+        (int) node (key): tuple((x_pos (float), y_pos (float))) (value) pairs that indicate the initial positions,
+        defaults to `None`
+    :var dict fixed_positions: A dictionary with 
+        (int) node (key): tuple((x_pos (float), y_pos (float))) (value) pairs that indicate stationary positions of the nodes,
+        defaults to `None`
+    :var str plot_variable: A string indicating the main variable to plot as the node color, defaults to `None`
+    :var str color_scale: A string indicating the matplotlib color scale to use, defaults to `Reds`
+    :var bool show_plot: Inidicates whether the animated plot should be shown after the simulation, defaults to `True`
+    :var bool repeat: Indicates whether the animated plot should repeat itself after fully playing, defaults to `True`
+    :var str plot_output: The path + name + extension of where the output of the animation should be saved,
+        if it is not set, the plot will not be saved, defaults to `None`
+    :var int save_fps: The frames per second the saved animation should have, defaults to 5
+    :var str plot_title: The title of the plot, defaults to `Network visualization`
+    :var layout: The layout of the network used for the visualization, 
+        this can be a networkx layout function, a custom function, or a string indicating a built-in function, like `fr`.
+        This will then use the `layout_fruchterman_reingold` from the igraph package. If a custom function is used, 
+        it should return a dictionary where they keys are nodes and the values are tuples with their x and y positions as floats.
+        Defaults to `None`
+    :vartype layout: str or function
+    :var dict layout_params: A dictionary that is unpacked when calling the layout function if a custom layout function is set. 
+        The keys should correspond with the parameters of the function. Defaults to `None`
+    :var float edge_alpha: The alpha of the edges between nodes in the plot, defaults to `0.2`
+    :var str edge_values: A string indicating which `edge_values` variable from the model should be used to visualize the edge colors,
+        defaults to `None` 
+    :var bool directed: Indicates whether the network plot should have directed edges, defaults to `True`
+    '''
     def __init__(self, config):
-        # self.__dict__.update(iterable, **kwargs)
+        '''
+        Initialise the visualization config
+
+        :param dict config: Dictionary containing the values for the members of the configuration class,
+            When certain keys/value pairs are not provided, default values are used
+        '''
         self.set_config(config)
         self.validate()
 
     def set_config(self, config):
+        '''
+        Set the config, its default values and validate it after
+
+        :param dict config: Dictionary containing the values for the members of the configuration class,
+            When certain keys/value pairs are not provided, default values are used
+        '''
         self.config = config
         self.plot_interval = config['plot_interval'] if 'plot_interval' in config else 1
         self.initial_positions = config['initial_positions'] if 'initial_positions' in config else None
@@ -52,6 +91,12 @@ class VisualizationConfiguration(object):
             self.variable_limits = config['variable_limits']
 
     def validate(self):
+        '''
+        Validate the config using the `ConfigValidator` class.
+
+        :raises ValueError: if a class member does not match its expected type or range, 
+            or if is not optional and has not been set
+        '''
         ConfigValidator.validate('plot_interval', self.plot_interval, int, variable_range=(0, ))
         ConfigValidator.validate('initial_positions', self.initial_positions, dict, optional=True)
         ConfigValidator.validate('fixed_positions', self.fixed_positions, dict, optional=True)
@@ -75,11 +120,25 @@ class VisualizationConfiguration(object):
         ConfigValidator.validate('edge_values', self.edge_values, str, optional=True)
         ConfigValidator.validate('directed', self.directed, bool)
 
+
 class Visualizer(object):
-    """
+    '''
     Visualizer class handling animations and plotting
-    """
+
+    :var VisualizationConfiguration config: The config class containing all configuration values
+    :var networkx.classes.graph.Graph graph: The networkx graph to plot
+    :var dict state_map: A dictionary mapping the state names (str) to the index of the state column in the 2d states array 
+    :var dict edge_values_map: A dictionary mapping the edge value names (str) to the index of the edge values arrays
+    :var dict states: A dictionary where the key is an iteration (int) and the values are a 2d array with columns as state values and rows as nodes
+    :var dict adjacencies: A dictionary where the key is an iteration (int) and the values are network adjacency matrices
+    :var dict edge_values: A dictionary where the key is an iteration (int) and the values are network edge values
+    :var dict utilities: A dictionary where the key is an iteration (int) and the values are utility values per edge
+    :var int max_iteration: The max amount of iterations that are available
+    '''
     def __init__(self, config, model_input):
+        '''
+        Initialize the visualizer object by assigning the class members and then generating locations for the network for each iteration
+        '''
         graph, state_map, model_output, edge_values_map = model_input
         self.config = config
         self.graph = graph
@@ -96,6 +155,9 @@ class Visualizer(object):
         self.max_iteration = self.get_total_iterations()
 
     def create_locations(self):
+        '''
+        Generate locations for all the adjacency graphs for each iteration
+        '''
         print('Creating locations for adjacency graphs...')
         if len(self.adjacencies.values()) > 0:
             self.assign_dynamic_graph_values()
@@ -103,6 +165,9 @@ class Visualizer(object):
             self.assign_static_graph_values()
 
     def assign_dynamic_graph_values(self):
+        '''
+        For each iteration and adjacency matrix, generate new locations or use the previous ones if the graph hasn't changed
+        '''
         self.locations = {}
         self.graphs = {}
         for iteration, adjacency_matrix in self.adjacencies.items():
@@ -118,6 +183,14 @@ class Visualizer(object):
                 self.create_new_positions_graph(iteration, adjacency_matrix, last_index)
 
     def create_new_positions_graph(self, iteration, adjacency_matrix, last_index):
+        '''
+        Create new graphs: if it is the first iteration and initial positions have been given, use them,
+        otherwise use the previous graph's calculated positions as initial positions if there are any
+
+        :param int iteration: The iteration to store and create the positions for
+        :param numpy.ndarray adjacency_matrix: The adjacency matrix that the positions should be generated for
+        :param int last_index: The last iteration that the locations were generated for
+        '''
         # If it is the first iteration and initial positions have been given, use them
         if iteration == list(self.adjacencies.keys())[0] and self.config.initial_positions:
             self.locations[iteration] = self.config.initial_positions
@@ -133,6 +206,12 @@ class Visualizer(object):
             self.graphs[iteration] = graph
 
     def get_initial_positions(self, last_index):
+        '''
+        Check if `last_index` has already any locations generated, if so use it as initial position for the next location generation
+
+        :return: Initial positions to use for the next location generation
+        :rtype: dict or None
+        '''
         if last_index in self.locations:
             initial_positions = self.locations[last_index]
         else:
@@ -140,6 +219,15 @@ class Visualizer(object):
         return initial_positions
 
     def create_adjacency_node_locations(self, adjacency_matrix, initial_positions):
+        '''
+        Create a networkx graph from an adjacency matrix and return the generated locations of the nodes
+
+        :param numpy.ndarray adjacency_matrix: The adjacency matrix to turn into a networkx graph
+        :param initial_positions: The initial positions to use when generating new positions
+        :type initial_positions: Dict or None 
+        :return: A `tuple` containing the new networkx graph and the corresponding node positions
+        :rtype: `tuple`
+        '''
         # Adjacency matrix to graph
         if self.config.directed:
             graph = nx.convert_matrix.from_numpy_array(adjacency_matrix, create_using=nx.DiGraph)
@@ -152,6 +240,15 @@ class Visualizer(object):
         return (graph, positions)
 
     def create_layout(self, graph, initial_positions=None):
+        '''
+        Generate new positions for the nodes in a given graph, using initial positions if given
+
+        :param networkx.classes.graph.Graph graph: The graph with the nodes to generate the locations for
+        :param initial_positions: Optional initial positions to use when creating the node locations
+        :type initial_positions: Dict, optional
+        :return: A dictionary with nodes as keys and tuples of form (x_pos, y_pos) as values
+        :rtype: dict
+        '''
         if self.config.layout:
             if self.config.layout == 'fr':
                 import pyintergraph
@@ -170,6 +267,9 @@ class Visualizer(object):
         return positions
 
     def create_graph_node_locations(self):
+        '''
+        Create locations of the graph for graph is static positions is set, use intitial positions if set
+        '''
         if self.config.initial_positions:
             self.static_locations = self.config.initial_positions
         elif 'pos' in self.graph.nodes[0].keys():
@@ -184,11 +284,13 @@ class Visualizer(object):
 
     @staticmethod
     def read_states_from_file(path):
-        """
+        '''
         Reads in saved states to disk and returns a numpy array
 
         Note: Has to be reworked
-        """
+        
+        :param str path: The path to read the states from
+        '''
         lines = open(path, 'r').readlines()
         dimensions = make_tuple(lines[1][1:])
         return np.loadtxt(path).reshape(dimensions)
@@ -200,6 +302,23 @@ class Visualizer(object):
         visualizations[vis_type]()
 
     def setup_animation(self):
+        '''
+        Setup the animation by creating all the necessary elements for the plot
+
+        :return: tuple containing all necessary plot elements:
+            state_names: names of all the states to display, 
+            n_states: integer with all the states, 
+            node_colors: list will all the colors of the nodes for each iteration, 
+            fig: matplotlib figure, 
+            gs: figure gridspec, 
+            network: subplot to plot the network in, 
+            axis: list of axes to display the barplots, 
+            n: amount of plots, 
+            cm: colormap to use, 
+            vmin: minimum value of the node colors, 
+            vmax: maximum value of the node colors, 
+            colors: 25 values between 0 and 1 on the colormap
+        '''
         state_names = list(self.state_map.keys())
         n_states = len(state_names)
 
@@ -228,6 +347,11 @@ class Visualizer(object):
         return state_names, n_states, node_colors, fig, gs, network, axis, n, cm, vmin, vmax, colors
 
     def animation(self):
+        '''
+        This function displays and animates the visualization.
+
+        The plot is being cleared and redrawn every plot. If configured, the plot will be shown and saved.
+        '''
         state_names, n_states, node_colors, fig, gs, network, axis, n, cm, vmin, vmax, colors = \
             self.setup_animation()
 
@@ -293,13 +417,13 @@ class Visualizer(object):
             self.save_plot(ani)
 
     def save_plot(self, simulation):
-        """
+        '''
         Save the plot to a file,
         specified in plot_output in the visualization configuration
         The file is generated using the writer from the pillow library
 
         :param simulation: Output of matplotlib animation.FuncAnimation
-        """
+        '''
         print('Saving plot at: ' + self.config.plot_output + ' ...')
         split = self.config.plot_output.split('/')
         file_name = split[-1]
@@ -313,6 +437,14 @@ class Visualizer(object):
         print('Saved: ' + self.config.plot_output)
 
     def get_node_colors(self):
+        '''
+        Helper function to create a list of floats that indicate the colors of each node.
+
+        If utility is selected, the values are taken from the utility arrays, otherwise the correct state is chosen
+
+        :return: `list` of lists where each list corresponds to a list of floats that indicate the color for each node
+        :rtype: list
+        '''
         iterations = list(self.states.keys())
         node_colors = []
         if self.config.plot_variable == 'utility':
@@ -331,6 +463,16 @@ class Visualizer(object):
         return node_colors
 
     def get_last_index(self, variable, index):
+        '''
+        Find the key `index` in the dictionary `variable`. 
+        If `index` does not exist, subtract 1 from `index` and try again.
+        Keep repeating this, until a value is found.
+
+        :param dict variable: The dictionary to find the key for
+        :param int index: The index to find the key in the dict for
+        :return: The found key in the dictionary that matches the `index` parameter.
+        :rtype: int
+        '''
         iterations = list(variable.keys())
         if index < iterations[0]:
             return iterations[0]
@@ -339,6 +481,12 @@ class Visualizer(object):
         return index
 
     def get_total_iterations(self):
+        ''' 
+        Get the total amount of iterations that can be used for the visualization
+
+        :return: The total amount of iterations
+        :rtype: int
+        '''
         visualizables = [
             self.states,
             self.adjacencies,
