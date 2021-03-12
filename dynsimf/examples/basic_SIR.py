@@ -8,8 +8,9 @@ from dynsimf.models.Model import ModelConfiguration
 
 if __name__ == "__main__":
     # Network definition
-    n = 400
-    g = nx.erdos_renyi_graph(n, 0.1)
+    n = 200
+    # g = nx.erdos_renyi_graph(n, 0.1)
+    g = nx.random_geometric_graph(n, 0.3)
 
     model = Model(g)
 
@@ -33,26 +34,57 @@ if __name__ == "__main__":
         'state': initial_infected
     }
 
+    # Matrix/array version
     def update_state(constants):
         state = model.get_state('state')
+        adjacency = model.get_adjacency()
 
         infected_indices = np.where(state == 1)[0]
 
-        # Update infected neighbors to infect neighbors
-        for infected in infected_indices:
-            nbs = model.get_neighbors(infected)
-            for nb in nbs:
-                if state[nb] == 0 and np.random.random_sample() < constants['beta']:
-                    state[nb] = 1
+        infected_adj = adjacency[infected_indices]
+
+        susceptibles = np.zeros(len(state))
+        susceptibles[state==0] = 1
+
+        susceptible_adjacency = susceptibles * infected_adj
+        susceptible_neighbors = np.where(susceptible_adjacency==1)[1]
+
+        infected_sampled = (np.random.random_sample(len(susceptible_neighbors)) < constants['beta'])
+        new_infected_indices = np.unique(infected_sampled * susceptible_neighbors)
+
+        if (0 not in susceptible_neighbors or not infected_sampled[0]) and len(new_infected_indices) > 0:
+            new_infected_indices = np.delete(new_infected_indices, [0])
+
+        state[new_infected_indices] = 1
 
         # Update infected to recovered
         recovery_chances = np.random.random_sample(len(infected_indices))
         new_states = (recovery_chances < constants['gamma']) * 2
         new_states[new_states == 0] = 1
         state[infected_indices] = new_states
-    
+
         return {'state': state}
 
+    # # For loop version
+    # def update_state(constants):
+    #     state = model.get_state('state')
+
+    #     infected_indices = np.where(state == 1)[0]
+
+    #     # Update infected neighbors to infect neighbors
+    #     for infected in infected_indices:
+    #         nbs = model.get_neighbors(infected)
+    #         for nb in nbs:
+    #             if state[nb] == 0 and np.random.random_sample() < constants['beta']:
+    #                 state[nb] = 1
+
+    #     # Update infected to recovered
+    #     recovery_chances = np.random.random_sample(len(infected_indices))
+    #     new_states = (recovery_chances < constants['gamma']) * 2
+    #     new_states[new_states == 0] = 1
+    #     state[infected_indices] = new_states
+    
+    #     return {'state': state}
 
     # Model definition
     model.constants = constants
@@ -61,7 +93,7 @@ if __name__ == "__main__":
 
     model.set_initial_state(initial_state, {'constants': model.constants})
 
-    its = model.simulate(400)
+    its = model.simulate(600)
 
     iterations = its['states'].values()
 
@@ -80,6 +112,7 @@ if __name__ == "__main__":
     plt.show()
 
     visualization_config = {
+        'initial_positions': nx.get_node_attributes(g, 'pos'),
         'plot_interval': 5,
         'plot_variable': 'state',
         'color_scale': 'brg',
@@ -87,7 +120,7 @@ if __name__ == "__main__":
             'state': [0, 2],
         },
         'show_plot': True,
-        'plot_output': '../animations/sir_less.gif',
+        'plot_output': '../animations/sir_geo.gif',
         'plot_title': 'SIR model',
     }
 
