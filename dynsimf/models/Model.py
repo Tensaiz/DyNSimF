@@ -43,8 +43,8 @@ class ModelConfiguration(object):
             MemoryConfiguration(MemoryConfigurationType.EDGE_VALUES, {
                 'memory_size': -1
             }) \
-            if 'adjacency_memory_config' not in cfg_keys \
-            else cfg['adjacency_memory_config']
+            if 'edge_values_memory_config' not in cfg_keys \
+            else cfg['edge_values_memory_config']
         self.utility_memory_config = MemoryConfiguration(MemoryConfigurationType.UTILITY) \
             if 'utility_memory_config' not in cfg_keys \
             else cfg['utility_memory_config']

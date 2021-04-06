@@ -2,9 +2,10 @@
 
 ## General
 - [x] Rename/relocate project
-- [ ] Add validation to all class members and throw meaningful warnings
+- [x] Add validation to all class members 
   - [x] Add validation to configs
-- [ ] Add enums where applicable
+- [ ] Throw meaningful warnings
+- [x] Add enums where applicable
 
 ## Model
 - [x] Create scheme class
@@ -20,6 +21,8 @@
 - [ ] Add non-array support
 - [ ] Multi process update functions per iteration
 - [ ] Execute update every X iterations
+- [ ] Multiple simulations
+- [ ] Stop simulation after convergence of specific state
 
 ## Dynamic network utility layer
 
@@ -90,9 +93,7 @@
 - [x] More consistent network update locations
 - [x] Visualize edges with 0 utility
 - [x] Visualize utility
-- [x] Read states from disk
-  - [ ] Rework for dictionary format
-- [x] Visualize utility
+- [ ] Read states from disk
 - [ ] Add regular plots / trends
 - [ ] Optimize animation if possible
 - [ ] Support jupyter notebook
