@@ -80,6 +80,7 @@ class VisualizationConfiguration(object):
         self.edge_alpha = config['edge_alpha'] if 'edge_alpha' in config else 0.2
         self.edge_values = config['edge_values'] if 'edge_values' in config else None
         self.directed = config['directed'] if 'directed' in config else True
+        self.histogram_states = config['histogram_states'] if 'histogram_states' in config else None
 
         if 'variable_limits' not in config:
             self.variable_limits = {state: [-1, 1] for state in config['state_names']}
@@ -119,7 +120,7 @@ class VisualizationConfiguration(object):
         ConfigValidator.validate('edge_alpha', self.edge_alpha, float, variable_range=(0, 1))
         ConfigValidator.validate('edge_values', self.edge_values, str, optional=True)
         ConfigValidator.validate('directed', self.directed, bool)
-
+        ConfigValidator.validate('histogram_states', self.histogram_states, list, optional=True)
 
 class Visualizer(object):
     '''
@@ -153,6 +154,7 @@ class Visualizer(object):
             self.utilities = {}
         self.create_locations()
         self.max_iteration = self.get_total_iterations()
+        self.histogram_states = list(self.state_map.keys()) if self.config.histogram_states is None else self.config.histogram_states
 
     def create_locations(self):
         '''
@@ -296,6 +298,9 @@ class Visualizer(object):
         return np.loadtxt(path).reshape(dimensions)
 
     def visualize(self, vis_type):
+        '''
+        Navigate to the appropriate visualisation function
+        '''
         visualizations = {
             'animation': self.animation
         }
@@ -319,8 +324,7 @@ class Visualizer(object):
             vmax: maximum value of the node colors, 
             colors: 25 values between 0 and 1 on the colormap
         '''
-        state_names = list(self.state_map.keys())
-        n_states = len(state_names)
+        n_states = len(self.histogram_states)
 
         node_colors = self.get_node_colors()
 
@@ -333,7 +337,7 @@ class Visualizer(object):
 
         for i in range(n_states):
             ax = fig.add_subplot(gs[-1, i])
-            ax.set_title(state_names[i])
+            ax.set_title(self.histogram_states[i])
             ax.get_xaxis().set_ticks([])
             ax.get_yaxis().set_ticks([])
             axis.append(ax)
@@ -344,7 +348,7 @@ class Visualizer(object):
         vmin = self.config.variable_limits[self.config.plot_variable][0]
         vmax = self.config.variable_limits[self.config.plot_variable][1]
         colors = cm(np.linspace(0, 1, 25))
-        return state_names, n_states, node_colors, fig, gs, network, axis, n, cm, vmin, vmax, colors
+        return n_states, node_colors, fig, gs, network, axis, n, cm, vmin, vmax, colors
 
     def animation(self):
         '''
@@ -352,7 +356,7 @@ class Visualizer(object):
 
         The plot is being cleared and redrawn every plot. If configured, the plot will be shown and saved.
         '''
-        state_names, n_states, node_colors, fig, gs, network, axis, n, cm, vmin, vmax, colors = \
+        n_states, node_colors, fig, gs, network, axis, n, cm, vmin, vmax, colors = \
             self.setup_animation()
 
         def animate(curr):
@@ -362,13 +366,15 @@ class Visualizer(object):
             network.clear()
             for i, ax in enumerate(axis):
                 ax.clear()
-                data = self.states[state_index][:, i]
+
+                histogram_index = self.state_map[self.histogram_states[i]]
+                data = self.states[state_index][:, histogram_index]
                 bc = ax.hist(data,
-                             range=self.config.variable_limits[state_names[i]],
+                             range=self.config.variable_limits[self.histogram_states[i]],
                              density=1, bins=25, edgecolor='black')[2]
                 for j, e in enumerate(bc):
                     e.set_facecolor(colors[j])
-                ax.set_title(state_names[i])
+                ax.set_title(self.histogram_states[i])
 
             edge_color = None
             if self.locations:
