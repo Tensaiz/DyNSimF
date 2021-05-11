@@ -3,6 +3,7 @@ import tqdm
 import copy
 import numpy as np
 import networkx as nx
+import random
 
 from dynsimf.models.components.Memory import MemoryConfiguration
 from dynsimf.models.components.Memory import MemoryConfigurationType
@@ -59,6 +60,7 @@ class Model(object, metaclass=ABCMeta):
         self.clear()
         self.init()
         np.random.seed(seed)
+        random.seed(seed)
 
     @property
     def constants(self):
