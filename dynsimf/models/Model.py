@@ -147,10 +147,10 @@ class Model(object, metaclass=ABCMeta):
         '''
         Set the initial values for each state for each node.
 
-        :param initial_state: A dictionary containing either an array, function or constant value.
-        The keys should represent state names and their value will be used as the initial value.
-        In case of an array, the indices will be used for the correpsonding nodes.
-        A constant value will be duplicated for each node for that state.
+        :param initial_state: A dictionary containing either an array, function or constant value.\
+        The keys should represent state names and their value will be used as the initial value.\
+        In case of an array, the indices will be used for the correpsonding nodes.\
+        A constant value will be duplicated for each node for that state.\
         If a function is used, it should return either a constant value or array.
         :type initial_state: list or number or function
         :param args: Arguments to provide to every function provided in the initial_state dictionary, defaults to {}
@@ -169,10 +169,10 @@ class Model(object, metaclass=ABCMeta):
         '''
         Set the initial values for each edge value for each node connection.
 
-        :param initial_state: A dictionary containing either an array, function or constant value.
-        The keys should represent edge value names and their value will be used as the initial value.
-        In case of an array, it should be 2d and each index should match the value for the edge value between node i to j.
-        A constant value will be duplicated for each node value for that edge value name.
+        :param initial_state: A dictionary containing either an array, function or constant value.\
+        The keys should represent edge value names and their value will be used as the initial value.\
+        In case of an array, it should be 2d and each index should match the value for the edge value between node i to j.\
+        A constant value will be duplicated for each node value for that edge value name.\
         If a function is used, it should return either a constant value or a 2d array.
         :type initial_state: list or number or function
         :param args: Arguments to provide to every function provided in the initial_state dictionary, defaults to {}
@@ -389,19 +389,32 @@ class Model(object, metaclass=ABCMeta):
 
     def add_network_update(self, fun, args=None, condition=None, get_nodes=False):
         '''
-        Helper function that is a shorthand to set an update to update the network.
+        Helper function that is a shorthand to set an update to update the network.\
         It shows more clearly what is updated in the name and does not require an UpdateType object.
 
-        :param fun: The function that updates the network.\n
-        To update the network using a function, a dictionary should be returned with specific keys indicating what kind of change the values of the dictionary are. There are three options: `add`, `edge_change`, and `remove`. The remove option is the most straightforward, if this key is included in the dictionary that is returned by the function, then the corresponding value should be a list of the names of all the nodes that should be removed from the network. When using the `add` key, the corresponding value should be a list of dictionaries, where each dictionary inside the list will serve as the initialization for a new node. This dictionary should contain 2 keys: `neighbors` and `states`. The `neighbors` key should have a list as value, where each entry in the list should be a name of a neighbor. This way new nodes can immediately be connected to other nodes when they are added to the network. The `states` key should have another dictionary as a value, in which every key can refer to a state with corresponding initial values for that node. This way, nodes can now be added to the network and their connections and states can immediately be initialized.\n
+        :param fun: The function that updates the network.\
+        To update the network using a function, \
+        a dictionary should be returned with specific keys indicating what kind of change the values of the dictionary are. \
+        There are three options: `add`, `edge_change`, and `remove`. The remove option is the most straightforward, \
+        if this key is included in the dictionary that is returned by the function, \
+        then the corresponding value should be a list of the names of all the nodes that should be removed from the network. \
+        When using the `add` key, the corresponding value should be a list of dictionaries, \
+        where each dictionary inside the list will serve as the initialization for a new node. \
+        This dictionary should contain 2 keys: `neighbors` and `states`. \
+        The `neighbors` key should have a list as value, where each entry in the list should be a name of a neighbor. \
+        This way new nodes can immediately be connected to other nodes when they are added to the network. \
+        The `states` key should have another dictionary as a value, \
+        in which every key can refer to a state with corresponding initial values for that node. \
+        This way, nodes can now be added to the network and their connections and states can immediately be initialized.\n
+
         :type fun: function
         :param args: Arguments for the given function. The keys should match the parameters of the function, defaults to None
         :type args: dict, optional
-        :param condition: A single chained condition that filters the nodes.
+        :param condition: A single chained condition that filters the nodes.\
         The update will only be applied on the nodes that the condition returns, defaults to None
         :type condition: Condition, optional
-        :param get_nodes: A boolean indicating whether the given function
-        should receive a list argument that gives the indices of the nodes
+        :param get_nodes: A boolean indicating whether the given function\
+        should receive a list argument that gives the indices of the nodes\
         that the update will be applied on, defaults to False
         :type get_nodes: bool, optional
         '''
@@ -409,18 +422,18 @@ class Model(object, metaclass=ABCMeta):
 
     def add_edge_values_update(self, fun, args=None, condition=None, get_nodes=False):
         '''
-        Helper function that is a shorthand to set an update to update the edge values.
+        Helper function that is a shorthand to set an update to update the edge values.\
         It shows more clearly what is updated in the name and does not require an UpdateType object.
 
         :param fun: The function that updates the edge values. It should return a 2d array with values for each desired edge value
         :type fun: function
         :param args: Arguments for the given function. The keys should match the parameters of the function, defaults to None
         :type args: dict, optional
-        :param condition: A single chained condition that filters the nodes.
+        :param condition: A single chained condition that filters the nodes.\
         The update will only be applied on the nodes that the condition returns, defaults to None
         :type condition: Condition, optional
-        :param get_nodes: A boolean indicating whether the given function
-        should receive a list argument that gives the indices of the nodes
+        :param get_nodes: A boolean indicating whether the given function\
+        should receive a list argument that gives the indices of the nodes\
         that the update will be applied on, defaults to False
         :type get_nodes: bool, optional
         '''
@@ -482,7 +495,7 @@ class Model(object, metaclass=ABCMeta):
 
         :param nodes: A list of nodes to get the adjacency for
         :type nodes: list or numpy.ndarray
-        :return: A numpy.ndarray where each row matches a node from the argument and each column represents whether the node is linked to it.
+        :return: A numpy.ndarray where each row matches a node from the argument and each column represents whether the node is linked to it.\
         A 1 indicates a connection and a 0 the opposite.
         :rtype: numpy.ndarray
         '''
@@ -537,8 +550,8 @@ class Model(object, metaclass=ABCMeta):
         :type n: int
         :param show_tqdm: Shows a progress bar and estimates time until completion for the simulation, defaults to True
         :type show_tqdm: bool, optional
-        :return: Simulation output. A dictionary is returned with 3 keys: `states`, `adjacency`, and `edge_values`.
-        Each value linked to a key is another dictionary with keys for each iteration of the simulation.
+        :return: Simulation output. A dictionary is returned with 3 keys: `states`, `adjacency`, and `edge_values`.\
+        Each value linked to a key is another dictionary with keys for each iteration of the simulation.\
         The value for each iteration key contains the relevant values for that key for that iteration.
         :rtype: dict
         '''
@@ -988,7 +1001,7 @@ class Model(object, metaclass=ABCMeta):
         '''
         Get all properties from the PropertyFunctions of the model
 
-        :return: Dictionary with values for the different property functions, 
+        :return: Dictionary with values for the different property functions, \
         keys are the names and values a list of outputs of the functions as values
         :rtype: dict
         '''
