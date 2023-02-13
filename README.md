@@ -26,7 +26,9 @@ sudo pip install dynsimf
 
 ## Documentation
 
-For examples, tutorials and a complete reference visit the project documentation website on [ReadTheDocs](http://dynsimf.readthedocs.io).
+For tutorials and a complete reference visit the project documentation website on [ReadTheDocs](http://dynsimf.readthedocs.io).
+For more examples visit the /model/examples folder
+
 
 
 
