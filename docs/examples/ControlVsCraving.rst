@@ -11,6 +11,7 @@ In this case, we have modelled the `The Dynamics of Addiction: Craving versus Se
 The model tries to model addiction by defining several interacting states; craving, self control, addiction, lambda, external influences, vulnerability, and addiction.
 
 It was slightly changed by using the average neighbour addiction to change the External influence variable to make it spread through the network.
+Constants here are all a single value, however, they could also be an array or list with a length equal to the number of nodes n. The example demonstrates that initial states can be defined like a constant as a value or a list but could also be set via a function that can then be dependent on other states and constants.
 
 ----
 Code
@@ -26,7 +27,8 @@ Code
     from dynsimf.models.Model import ModelConfiguration
 
     # Network definition
-    g = nx.random_geometric_graph(250, 0.125)
+    n = 250
+    g = nx.random_geometric_graph(n, 0.125)
     cfg = {
         'utility': False,
     }
