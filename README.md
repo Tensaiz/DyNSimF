@@ -1,7 +1,6 @@
 # DyNSimF - Dynamic Network Simulation Framework
 
 ![CI](https://github.com/Tensaiz/DyNSimF/workflows/CI/badge.svg)
-[![BCH compliance](https://bettercodehub.com/edge/badge/Tensaiz/DyNSimF?branch=master)](https://bettercodehub.com/)
 [![Coverage Status](https://coveralls.io/repos/github/Tensaiz/DyNSimF/badge.svg?branch=master)](https://coveralls.io/github/Tensaiz/DyNSimF?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/dynsimf/badge/?version=latest)](http://dynsimf.readthedocs.io/en/latest/?badge=latest)
 [![PyPI download month](https://img.shields.io/pypi/dm/dynsimf.svg?color=blue&style=plastic)](https://pypi.python.org/pypi/dynsimf/)
