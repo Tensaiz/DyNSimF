@@ -4,7 +4,6 @@
 [![BCH compliance](https://bettercodehub.com/edge/badge/Tensaiz/DyNSimF?branch=master)](https://bettercodehub.com/)
 [![Coverage Status](https://coveralls.io/repos/github/Tensaiz/DyNSimF/badge.svg?branch=master)](https://coveralls.io/github/Tensaiz/DyNSimF?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/dynsimf/badge/?version=latest)](http://dynsimf.readthedocs.io/en/latest/?badge=latest)
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Tensaiz/DyNSimF.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Tensaiz/DyNSimF/context:python)
 [![PyPI download month](https://img.shields.io/pypi/dm/dynsimf.svg?color=blue&style=plastic)](https://pypi.python.org/pypi/dynsimf/)
 
 <img src="https://raw.githubusercontent.com/Tensaiz/DyNSimF/master/docs/mock_logo.png" alt="DyNSimF logo" height="200"/>
