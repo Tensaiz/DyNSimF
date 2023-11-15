@@ -59,7 +59,7 @@
   - [x] Optional state init
   - [x] Optional edges 
     - [x] Optional utility init
-- [] Optional utility callable initialization
+- [ ] Optional utility callable initialization
 
 ## UI
 - [ ] Add graphical UI for state / constant selection / distribution specification
