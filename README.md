@@ -35,7 +35,3 @@ For more examples visit the /dynsimf/examples folder.
 ``DyNSimF`` is an active open-source project, any contribution is welcome!
 
 If you like to include your model in DyNSimF feel free to fork the project, open an issue and contact us.
-
-Do you want to be part of the DyNSimF? Join the community to discuss enhancements, bugs, concepts or any other topic on **Slack**!
-
-[<img align="middle" width="150" src="https://raw.githubusercontent.com/Tensaiz/DyNSimF/master/docs/join_slack.png">](https://join.slack.com/t/dynsimfdynami-mst3236/shared_invite/zt-iznvqu2p-KW6AHxFLhMandFXwc6Tu1g)
