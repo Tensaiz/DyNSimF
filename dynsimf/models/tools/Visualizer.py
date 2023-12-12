@@ -46,6 +46,7 @@ class VisualizationConfiguration(object):
     :var str edge_values: A string indicating which `edge_values` variable from the model should be used to visualize the edge colors,
         defaults to `None` 
     :var bool directed: Indicates whether the network plot should have directed edges, defaults to `True`
+    : dict save_arguments: unpacks to the mpl.animation.Animation.save(filename, **save_arguments). This can consist of writer, fps, dpi, codec, etc. If given, it overwrites other given inputs such as save_fps.
     '''
     def __init__(self, config):
         '''
@@ -81,6 +82,7 @@ class VisualizationConfiguration(object):
         self.edge_values = config['edge_values'] if 'edge_values' in config else None
         self.directed = config['directed'] if 'directed' in config else True
         self.histogram_states = config['histogram_states'] if 'histogram_states' in config else None
+        self.save_arguments = config['save_arguments'] if 'save_arguments' in config else None
 
         if 'variable_limits' not in config:
             self.variable_limits = {state: [-1, 1] for state in config['state_names']}
@@ -437,9 +439,11 @@ class Visualizer(object):
         if not os.path.exists(file_path):
             os.makedirs(file_path)
 
-        from PIL import Image
-        writergif = animation.PillowWriter(fps=self.config.save_fps)
-        simulation.save(self.config.plot_output, writer=writergif)
+        if self.config.save_arguments:
+            simulation.save(self.config.plot_output, **self.config.save_arguments)
+        else:
+            writergif = animation.PillowWriter(fps=self.config.save_fps)
+            simulation.save(self.config.plot_output, writer=writergif)
         print('Saved: ' + self.config.plot_output)
 
     def get_node_colors(self):
